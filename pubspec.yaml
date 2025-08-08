@@ -1,0 +1,13 @@
+name: bird_cli
+description: Object-oriented Dart framework for building modular CLI apps using command trees and step flows.
+version: 1.0.0
+repository: https://github.com/zopnote/bird-cli
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  path: ^1.9.1
+
+dev_dependencies:
+  test: ^1.24.0
