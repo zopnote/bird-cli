@@ -5,6 +5,9 @@ import 'package:bird_cli/response.dart';
 
 import 'flag.dart';
 
+/**
+ * Represents a CLI command with optional subcommands and flags.
+ */
 final class Command {
   Command({
     required this.use,
@@ -16,19 +19,31 @@ final class Command {
     this.subCommands = const [],
   });
 
-  /// The use name of the command that has to be
+  /// The command name used in CLI invocation.
   final String use;
+
+  /// Short description of the command.
   final String description;
+
+  /// Whether the command is hidden from help listings.
   final bool hidden;
+
+  /// Flags available to the command.
   List<Flag> flags;
+
+  /// Whether this command inherits flags from a parent.
   final bool inheritFlags;
+
+  /// Subcommands under this command. */
   final List<Command> subCommands;
+
+  /// Execution function invoked with the parsed context.
   final FutureOr<Response> Function(ExecutionContext context) run;
 
   /**
-   * Runs a root command and applies the parsed arguments as
-   * subcommands or flags to it. At the end one [Command].run() function is
-   * determined and will be executed.
+   * Executes the command with given arguments and global flags.
+   *
+   * @return 0 on success, 1 on failure.
    */
   FutureOr<int> execute(
     List<String> rawArguments, {
@@ -126,6 +141,7 @@ final class Command {
     return 0;
   }
 
+  /// Returns a help message describing usage and available flags.
   String syntaxMessage({final bool addFlags = true}) {
     String syntax = "$description\n";
     if (subCommands.isNotEmpty) {
@@ -133,7 +149,12 @@ final class Command {
       for (final Command subCommand in subCommands) {
         if (subCommand.hidden) continue;
         final int space = 20 - subCommand.use.length;
-        syntax = syntax + subCommand.use + (" " * space) + subCommand.description + "\n";
+        syntax =
+            syntax +
+            subCommand.use +
+            (" " * space) +
+            subCommand.description +
+            "\n";
       }
     }
     if (flags.isNotEmpty && addFlags) {
@@ -160,6 +181,7 @@ final class ExecutionContext {
     required this.flags,
   });
 
+  /// Returns a help message describing usage and available flags.
   String syntaxMessage() {
     String syntax = "";
     syntax += command.syntaxMessage(addFlags: false) + "\n";
@@ -170,8 +192,18 @@ final class ExecutionContext {
     return syntax;
   }
 
+  /**
+   * Retrieves a flag by name and casts it to type T.
+   *
+   * Throws [Exception] if flag is not found.
+   */
   Flag<T> getFlag<T>(String name) => getFlagOfList<T>(flags, name);
 
+  /**
+   * Retrieves a flag by name and casts it to type T.
+   *
+   * Throws [Exception] if flag is not found.
+   */
   static Flag<T> getFlagOfList<T>(final List<Flag> flags, final String name) {
     for (final Flag flag in flags) {
       if (flag.name == name) {
@@ -190,7 +222,7 @@ final class ExecutionContext {
   }) {
     return Response(
       message: (syntax ? syntaxMessage() : "") + "$message",
-      isError: isError
+      isError: isError,
     );
   }
 }
