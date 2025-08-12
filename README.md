@@ -1,4 +1,4 @@
-# ``bird-cli``
+# ``stepped-cli``
 A Dart framework for building modular, object-oriented CLI applications using a command–environment architecture. 
 It introduces a step-based execution model, where each step is a self-contained unit of logic or interaction. 
 This structure allows complex processes to be broken down into reusable, composable steps, improving clarity, 
@@ -6,7 +6,7 @@ testability, and maintainability of CLI workflows.
 
 To add it to your dart project, just run:
 ````bash
-dart pub add bird_cli
+dart pub add stepped_cli
 ````
 
 ## First command

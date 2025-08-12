@@ -1,4 +1,4 @@
-name: bird
+name: stepped_cli
 description: Object-oriented Dart framework for building modular CLI apps using command trees and step flows.
 version: 1.0.0
 repository: https://github.com/zopnote/bird-cli

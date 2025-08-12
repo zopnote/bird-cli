@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:bird/environment.dart';
-import 'package:bird/response.dart';
-import 'package:bird/steps.dart';
-import 'package:bird/config.dart';
+import 'package:stepped_cli/environment.dart';
+import 'package:stepped_cli/response.dart';
+import 'package:stepped_cli/steps.dart';
+import 'package:stepped_cli/config.dart';
 
-import 'package:path/path.dart' as path;
 
 
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:bird_cli/response.dart';
+import 'package:stepped_cli/response.dart';
 
 import 'flag.dart';
 

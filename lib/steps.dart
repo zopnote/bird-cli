@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
 
-import 'package:bird/config.dart';
-import 'package:bird/environment.dart';
-import 'package:bird/response.dart';
-import 'package:bird/step.dart';
+import 'package:stepped_cli/config.dart';
+import 'package:stepped_cli/environment.dart';
+import 'package:stepped_cli/response.dart';
+import 'package:stepped_cli/step.dart';
 import 'package:path/path.dart' as path;
 
 class Conditional<T extends Step> extends ConfigureStep {
@@ -115,7 +115,7 @@ final class Chain<T extends Environment> extends ConfigureStep<T> {
       );
 
   /**
-   * CHANGE BACK TO ALLOW ConfigureSteps in the conigured chain there
+   * CHANGE BACK TO ALLOW ConfigureSteps in the configured chain there
    *         |    |     |      |
    *         V    V     V      V
    */
