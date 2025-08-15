@@ -31,12 +31,12 @@ void main() {
       ),
     ],
   ).configure(Config());
+
   if (!(step is AtomicStep)) {
     throw Exception("Error, step isn't an atomic step");
   }
   while (step != null) {
-
     step = (step as AtomicStep).next!;
-    print(step.name);
+    print(step.toJson());
   }
 }

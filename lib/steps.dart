@@ -1,10 +1,10 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:stepped_cli/config.dart';
 import 'package:stepped_cli/environment.dart';
 import 'package:stepped_cli/response.dart';
+import 'package:stepped_cli/spinner.dart';
 import 'package:stepped_cli/step.dart';
 
 import 'package:path/path.dart' as path;
@@ -19,53 +19,49 @@ final class EnsurePrograms<T extends Environment> extends ConfigureStep {
   });
 
   @override
-  Step<Environment<Config>> configure(Config config) {
-    return Runnable(
-      (environment) {
-        final String executableExtension = Platform.isWindows ? ".exe" : "";
-        final List<String> pathVariableEntries =
-            Platform.environment["PATH"]?.split(
-              Platform.isWindows ? ";" : ":",
-            ) ??
-            [];
+  Step<Environment<Config>> configure(Config config) => Runnable(
+    (environment) {
+      final String executableExtension = Platform.isWindows ? ".exe" : "";
+      final List<String> pathVariableEntries =
+          Platform.environment["PATH"]?.split(Platform.isWindows ? ";" : ":") ??
+          [];
 
-        if (programs.isEmpty) return Response();
+      if (programs.isEmpty) return Response();
 
-        bool isAllFound = true;
-        for (String program in programs) {
-          bool found = false;
-          for (String pathVariableEntry in pathVariableEntries) {
-            final File programFile = File(
-              path.join(pathVariableEntry, "$program$executableExtension"),
-            );
-            if (programFile.existsSync()) {
-              found = true;
-            }
-          }
-
-          if (!found) {
-            final result = Process.runSync(
-              program,
-              [],
-              runInShell: true,
-              includeParentEnvironment: true,
-            );
-            if (result.exitCode == 0) {
-              found = true;
-            }
-          }
-
-          if (!found) {
-            stderr.writeln("$program" + " ✖  ");
-            isAllFound = false;
+      bool isAllFound = true;
+      for (String program in programs) {
+        bool found = false;
+        for (String pathVariableEntry in pathVariableEntries) {
+          final File programFile = File(
+            path.join(pathVariableEntry, "$program$executableExtension"),
+          );
+          if (programFile.existsSync()) {
+            found = true;
           }
         }
-        return Response(isError: isAllFound);
-      },
-      name: name,
-      description: description,
-    );
-  }
+
+        if (!found) {
+          final result = Process.runSync(
+            program,
+            [],
+            runInShell: true,
+            includeParentEnvironment: true,
+          );
+          if (result.exitCode == 0) {
+            found = true;
+          }
+        }
+
+        if (!found) {
+          stderr.writeln("$program" + " ✖  ");
+          isAllFound = false;
+        }
+      }
+      return Response(isError: isAllFound);
+    },
+    name: name,
+    description: description,
+  );
 }
 
 final class Install<T extends Environment> extends ConfigureStep {
@@ -274,18 +270,13 @@ final class Chain<T extends Environment> extends ConfigureStep<T> {
             "A step containing chained subordinary steps. Steps may depend on each other.",
       );
 
-  /**
-   * CHANGE BACK TO ALLOW ConfigureSteps in the configured chain there
-   *         |    |     |      |
-   *         V    V     V      V
-   */
   @override
   Step configure(Config config) {
     if (_steps.isEmpty) return Skipped();
     int i = 0;
     final Step main = _steps[i];
     Step iterable = main;
-    do {
+    for (i; i < _steps.length - 1; i++) {
       AtomicStep atomize(Step step) {
         while (!(step is AtomicStep)) {
           step = step.configure(config);
@@ -301,97 +292,7 @@ final class Chain<T extends Environment> extends ConfigureStep<T> {
           ? _steps[i] as AtomicStep
           : atomize(_steps[i]);
       iterable = atomicIterable.next as Step;
-      i++;
-    } while (i < _steps.length - 1);
+    }
     return main;
   }
-}
-
-Future<void> main() async {}
-
-class CompileMainAppEnvironment extends Environment<Config> {
-  CompileMainAppEnvironment(this.dartSDKPath);
-  final String dartSDKPath;
-}
-
-class CompileMainAppToolchain extends ConfigureStep<CompileMainAppEnvironment> {
-  const CompileMainAppToolchain()
-    : super(
-        name: "Compile main app",
-        description: "Toolchain for the compilation of the main application.",
-      );
-
-  @override
-  Step configure(Config config) {
-    return Chain(
-      steps: [
-        Conditional(
-          condition: (() => true)(),
-          child: Runnable(
-            name: "Delete folders",
-            description: "Deletion of special folders",
-            (environment) => Response(),
-          ),
-        ),
-        Chain(steps: []),
-        Shell(
-          name: "Build",
-          description: "Build toolchain system",
-          program: "cmake",
-          arguments: ["--build", "../", "--config", "debug"],
-        ),
-      ],
-    );
-  }
-}
-
-class ProcessSpinner {
-  final List<String> _frames;
-
-  Timer? _timer;
-  int _counter = 0;
-
-  ProcessSpinner({
-    List<String> frames = const [
-      '⠋',
-      '⠙',
-      '⠹',
-      '⠸',
-      '⠼',
-      '⠴',
-      '⠦',
-      '⠧',
-      '⠇',
-      '⠏',
-    ],
-  }) : _frames = frames;
-
-  void start([String message = '']) {
-    _counter = 0;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: 80), (timer) {
-      stdout.write('\r$message ${_frames[_counter % _frames.length]}');
-      _counter++;
-    });
-  }
-
-  void stop([String message = ""]) {
-    _timer?.cancel();
-    stdout.write('\r');
-    stdout.write(message + "\n");
-  }
-}
-
-Future waitWhile(bool test(), [Duration pollInterval = Duration.zero]) {
-  var completer = Completer();
-  check() {
-    if (!test()) {
-      completer.complete();
-    } else {
-      Timer(pollInterval, check);
-    }
-  }
-
-  check();
-  return completer.future;
 }

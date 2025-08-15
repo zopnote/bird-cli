@@ -3,19 +3,15 @@ import 'dart:io';
 
 import 'package:stepped_cli/environment.dart';
 import 'package:stepped_cli/response.dart';
-import 'package:stepped_cli/steps.dart';
+import 'package:stepped_cli/spinner.dart';
 import 'package:stepped_cli/config.dart';
-
-
-
-
 
 class Skipped<T extends Environment> extends AtomicStep<T> {
   Skipped()
-      : super(
-    name: "Skipped step",
-    description: "A step that represents no action.",
-  );
+    : super(
+        name: "Skipped step",
+        description: "A step that represents no action.",
+      );
   @override
   FutureOr<Response> execute(T environment) {
     return Response();
@@ -45,16 +41,11 @@ class Runnable<T extends Environment> extends AtomicStep<T> {
   }
 }
 
-
 abstract class Step<T extends Environment> {
   final String name;
   final String description;
 
-  const Step({
-    required this.name,
-    required this.description
-  });
-
+  const Step({required this.name, required this.description});
 
   Step configure(final Config config);
   FutureOr<Response> execute(final T environment);
@@ -74,6 +65,12 @@ abstract class AtomicStep<T extends Environment> extends Step<T> {
   @override
   Step<T> configure(final Config config) =>
       throw Exception("An atomic steps doesn't provide a configuration step.");
+
+  Map<String, dynamic> toJson() => {
+    "name": name,
+    "description": description,
+    if (next != null) "next": next!.toJson(),
+  };
 }
 
 abstract class ConfigureStep<T extends Environment> extends Step<T> {
@@ -84,5 +81,3 @@ abstract class ConfigureStep<T extends Environment> extends Step<T> {
     "A configurable step doesn't have a execution function, because it is a composition of steps.",
   );
 }
-
-
