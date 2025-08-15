@@ -10,15 +10,6 @@ import 'package:stepped_cli/config.dart';
 
 
 
-
-Response runToolchain<T extends Environment>(T environment, Step? main) {
-  main = main?.configure(environment.config);
-  while (main != null) {
-    print(main.name);
-    main = main.next;
-  }
-}
-
 class Skipped<T extends Environment> extends AtomicStep<T> {
   Skipped()
       : super(

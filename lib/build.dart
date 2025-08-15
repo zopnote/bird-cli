@@ -16,8 +16,6 @@
  *
  */
 
-import 'dart:async' as async;
-import 'dart:convert' as convert;
 import 'dart:io' as io;
 
 import 'package:path/path.dart' as path;
@@ -89,64 +87,7 @@ enum Config {
  */
 
 
-bool install({
-  List<String> installPath = const [],
-  List<String> directoryNames = const [],
-  List<String> fileNames = const [],
-  List<String> rootDirectoryPath = const [],
-  List<String> excludeEndings = const [],
-  List<String> relativePath = const [],
-}) {
-  try {
-    final io.Directory workDirectory = io.Directory(
-      path.joinAll(rootDirectoryPath + relativePath),
-    );
-    for (final entity in workDirectory.listSync()) {
-      if (entity is io.File) {
-        if (!fileNames.contains(path.basenameWithoutExtension(entity.path))) {
-          continue;
-        }
-        if (excludeEndings.contains(path.extension(entity.path))) {
-          continue;
-        }
-        final String filePath = path.join(
-          path.joinAll(installPath),
-          path.relative(entity.path, from: path.joinAll(rootDirectoryPath)),
-        );
-        final fileDirectory = io.Directory(path.dirname(filePath));
-        if (!fileDirectory.existsSync()) {
-          fileDirectory.createSync(recursive: true);
-        }
-        entity.copySync(filePath);
-      } else if (entity is io.Directory) {
-        if (!directoryNames.contains(
-          path.basenameWithoutExtension(entity.path),
-        )) {
-          continue;
-        }
-        final files = entity
-            .listSync(recursive: true)
-            .where((e) => (e is io.File))
-            .cast<io.File>();
-        for (final io.File file in files) {
-          final String filePath = path.join(
-            path.joinAll(installPath),
-            path.relative(entity.path, from: path.joinAll(rootDirectoryPath)),
-            path.relative(file.path, from: entity.path),
-          );
-          final fileDirectory = io.Directory(path.dirname(filePath));
-          if (!fileDirectory.existsSync()) {
-            fileDirectory.createSync(recursive: true);
-          }
-          file.copySync(filePath);
-        }
-      }
-    }
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
+
 
 /**
  * Representing a specific operating system.
