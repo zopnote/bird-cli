@@ -39,6 +39,13 @@ class Runnable<T extends Environment> extends AtomicStep<T> {
     }
     return await run(environment);
   }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {}
+      ..addAll(super.toJson())
+      ..addAll({"spinner": spinner != null});
+  }
 }
 
 abstract class Step<T extends Environment> {
@@ -49,6 +56,8 @@ abstract class Step<T extends Environment> {
 
   Step configure(final Config config);
   FutureOr<Response> execute(final T environment);
+
+  Map<String, dynamic> toJson() => {"name": name, "description": description};
 }
 
 abstract class AtomicStep<T extends Environment> extends Step<T> {
@@ -66,11 +75,10 @@ abstract class AtomicStep<T extends Environment> extends Step<T> {
   Step<T> configure(final Config config) =>
       throw Exception("An atomic steps doesn't provide a configuration step.");
 
-  Map<String, dynamic> toJson() => {
-    "name": name,
-    "description": description,
-    if (next != null) "next": next!.toJson(),
-  };
+  @override
+  Map<String, dynamic> toJson() => {}
+    ..addAll(super.toJson())
+    ..addAll({if (next != null) "next": next!.toJson()});
 }
 
 abstract class ConfigureStep<T extends Environment> extends Step<T> {

@@ -1,10 +1,12 @@
+import 'dart:convert';
+
 import 'package:stepped_cli/config.dart';
 import 'package:stepped_cli/environment.dart';
 import 'package:stepped_cli/response.dart';
 import 'package:stepped_cli/step.dart';
 import 'package:stepped_cli/steps.dart';
 
-void main() {
+Future<void> main() async {
   Step? step = Chain(
     steps: [
       Runnable(
@@ -15,6 +17,9 @@ void main() {
         description:
             "Runnable is an atomic step, that can be used with conditionals to ensure logic.",
       ),
+
+
+
       Chain(
         steps: [
           Conditional(
@@ -31,12 +36,12 @@ void main() {
       ),
     ],
   ).configure(Config());
-
-  if (!(step is AtomicStep)) {
-    throw Exception("Error, step isn't an atomic step");
+  if (step is AtomicStep) {
+    print(JsonEncoder.withIndent("   ").convert(step.toJson()));
   }
-  while (step != null) {
-    step = (step as AtomicStep).next!;
-    print(step.toJson());
+  while ((step as AtomicStep) != null) {
+    await step.execute(const Environment());
+    if (step.next == null) break;
+    step = step.next;
   }
 }

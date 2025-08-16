@@ -204,7 +204,7 @@ final class Shell<T extends Environment> extends ConfigureStep<T> {
             : this.program;
 
         final String doneFilePath = path.join(
-          workingDirectory ?? "",
+          workingDirectory ?? "./",
           ".${name.toLowerCase().replaceAll(" ", "_")}-process-done",
         );
         final List<String> arguments;
@@ -213,7 +213,7 @@ final class Shell<T extends Environment> extends ConfigureStep<T> {
             "-Command",
             """
         # Set variables
-        \$targetFolder = "${workingDirectory ?? ""}"
+        \$targetFolder = "${workingDirectory ?? "./"}"
         \$command = "${program}"
         \$arguments = "${this.arguments.join(" ")}"
         
@@ -233,7 +233,7 @@ final class Shell<T extends Environment> extends ConfigureStep<T> {
         final result = await Process.start(
           program,
           arguments,
-          workingDirectory: workingDirectory ?? "",
+          workingDirectory: workingDirectory ?? "./",
           environment: {},
           includeParentEnvironment: true,
           mode: ProcessStartMode.normal,
@@ -262,37 +262,38 @@ final class Shell<T extends Environment> extends ConfigureStep<T> {
 final class Chain<T extends Environment> extends ConfigureStep<T> {
   final List<Step> _steps;
 
-  Chain({required List<Step<T>> steps})
+  Chain({required final List<Step<T>> steps})
     : _steps = steps,
       super(
         name: "Execute chained steps",
         description:
-            "A step containing chained subordinary steps. Steps may depend on each other.",
+            "A step containing chained subordinary steps. "
+            "Steps may depend on each other.",
       );
 
   @override
   Step configure(Config config) {
     if (_steps.isEmpty) return Skipped();
-    int i = 0;
-    final Step main = _steps[i];
-    Step iterable = main;
-    for (i; i < _steps.length - 1; i++) {
-      AtomicStep atomize(Step step) {
-        while (!(step is AtomicStep)) {
-          step = step.configure(config);
-        }
-        while ((step as AtomicStep).next != null) {
-          step = step.next!;
-        }
-        return step;
-      }
 
-      final AtomicStep atomicIterable = atomize(iterable);
-      atomicIterable.next = _steps[i] is AtomicStep
-          ? _steps[i] as AtomicStep
-          : atomize(_steps[i]);
-      iterable = atomicIterable.next as Step;
+    final List<AtomicStep> atomicSteps = [];
+
+    for (Step step in _steps) {
+      while (!(step is AtomicStep)) {
+        step = step.configure(config);
+      }
+      atomicSteps.add(step);
     }
-    return main;
+
+    AtomicStep step = atomicSteps.first;
+
+    for (int i = 0; i < atomicSteps.length - 1; i++) {
+      if (i >= atomicSteps.length - 1) {
+        continue;
+      }
+      step.next = atomicSteps[i + 1];
+      step = step.next!;
+    }
+
+    return atomicSteps.first;
   }
 }
