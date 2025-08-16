@@ -1,4 +1,4 @@
-# ``stepped-cli``
+# ``stepped_cli``
 A Dart framework for building modular, object-oriented CLI applications using a command–environment architecture. 
 It introduces a step-based execution model, where each step is a self-contained unit of logic or interaction. 
 This structure allows complex processes to be broken down into reusable, composable steps, improving clarity, 
