@@ -1,13 +1,17 @@
-name: stepped_cli
-description: Object-oriented Dart framework for building modular CLI apps using command trees and step flows.
+name: stepflow
+description: |
+  Dart package that provides a structural base for creating step-based, 
+  modular workflows inside of applications.
+
 version: 1.0.0
-repository: https://github.com/zopnote/bird-cli
+repository: https://github.com/zopnote/stepflow
 
 environment:
   sdk: ^3.8.1
 
 dependencies:
   path: ^1.9.1
+  uuid: ^4.5.1
 
 dev_dependencies:
   test: ^1.24.0

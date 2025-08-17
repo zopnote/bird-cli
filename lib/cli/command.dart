@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:stepped_cli/response.dart';
+import 'package:stepflow/response.dart';
 
 import 'flag.dart';
 

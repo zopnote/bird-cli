@@ -18,9 +18,6 @@
 
 import 'dart:io' as io;
 
-import 'package:path/path.dart' as path;
-
-
 
 final class StepCommand {
   final String program;
