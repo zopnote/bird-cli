@@ -6,7 +6,7 @@ testability, and maintainability of CLI workflows.
 
 To add it to your dart project, just run:
 ````bash
-dart pub add stepped_cli
+dart pub add stepflow
 ````
 
 ## First command
