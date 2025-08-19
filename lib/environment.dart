@@ -16,7 +16,9 @@ abstract class Environment {
   FutureOr<void> dispose();
 }
 
-class ConsoleEnvironment extends Environment {}
+class ConsoleEnvironment extends Environment {
+
+}
 
 class SpinnerMessage extends Message {
   final List<String> _frames;
@@ -40,7 +42,7 @@ class SpinnerMessage extends Message {
     ],
   }) : _frames = frames;
   @override
-  void init() {
+  void add() {
     _counter = 0;
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(milliseconds: 80), (timer) {
@@ -50,7 +52,7 @@ class SpinnerMessage extends Message {
   }
 
   @override
-  void dispose() {
+  void remove() {
     _timer?.cancel();
     stdout.write('\r');
     stdout.write(content + "\n");
@@ -60,7 +62,7 @@ class SpinnerMessage extends Message {
 class TextMessage extends Message {
   const TextMessage(super.content);
   @override
-  void init() {
+  void add() {
     stdout.writeln(content);
   }
 }
@@ -68,6 +70,6 @@ class TextMessage extends Message {
 class Message {
   const Message(this.content);
   final String content;
-  void init() {}
-  void dispose() {}
+  void add() {}
+  void remove() {}
 }

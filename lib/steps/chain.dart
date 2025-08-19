@@ -1,5 +1,6 @@
 import 'package:stepflow/config.dart';
 import 'package:stepflow/steps/atomics.dart';
+import 'package:stepflow/steps/skipped.dart';
 
 final class Chain extends ConfigureStep {
   final List<Step> _steps;

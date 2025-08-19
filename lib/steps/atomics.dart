@@ -1,24 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:stepflow/environment.dart';
 import 'package:stepflow/response.dart';
 import 'package:stepflow/config.dart';
 
-class Skipped extends AtomicStep {
-  Skipped()
-    : super(
-        name: "Skipped step",
-        description: "A step that represents no action.",
-      );
-  @override
-  FutureOr<Response> execute(final Environment environment) {
-    return Response();
-  }
-}
 
-
-
+/**
+ * The blueprint for a atomic, representation of a step inside the workflows.
+ */
 abstract class Step {
   final String name;
   final String description;
@@ -33,8 +22,10 @@ abstract class Step {
 
 /**
  * Smallest mutable unit of the steps flow logic.
- * Contains a plain execution
- * After configuration the configured steps will be parsed into the [AtomicSteps].
+ * Derived classes have to override the execution function because an [AtomicStep]
+ * is the smallest unit, and the only unit that is executable.
+ *
+ * After configuration the configured steps will be parsed into their smallest parts [AtomicSteps].
  */
 abstract class AtomicStep extends Step {
   AtomicStep({required super.name, required super.description});
