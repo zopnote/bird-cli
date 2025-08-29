@@ -1,6 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:meta/meta.dart';
+import 'package:stepflow/response.dart';
+import 'package:stepflow/steps/atomics.dart';
+import 'package:stepflow/steps/chain.dart';
+
 import 'config.dart';
 
 abstract class Environment {
@@ -9,67 +14,59 @@ abstract class Environment {
   final List<Message> messages = const [];
   const Environment({required this.config});
 
+  void onMessage(Message message) {}
+
+  void onInit() {}
+
+  FutureOr<void> dispose() {}
+
+  @protected
+  void addMessage(Message message) {
+    if (messages.isNotEmpty) {
+      if (messages.last.isOpen) {
+        messages.last.close();
+      }
+    }
+    messages.add(message);
+    onMessage(message);
+  }
+
   operator [](String key) => variables[key];
-
-  void addMessage();
-
-  FutureOr<void> dispose();
 }
 
-class ConsoleEnvironment extends Environment {
 
-}
 
-class SpinnerMessage extends Message {
-  final List<String> _frames;
+/**
+ * Executes an workflow based on the entry step provided in this function.
+ * [runFlow] configures the steps to atomic steps and then execute them chronologically.
+ */
+Future<Response> runFlow({required Step step, required Environment environment}) async {
+  environment.onInit();
 
-  Timer? _timer;
-  int _counter = 0;
-
-  SpinnerMessage(
-    super.content, {
-    List<String> frames = const [
-      '⠋',
-      '⠙',
-      '⠹',
-      '⠸',
-      '⠼',
-      '⠴',
-      '⠦',
-      '⠧',
-      '⠇',
-      '⠏',
-    ],
-  }) : _frames = frames;
-  @override
-  void add() {
-    _counter = 0;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: 80), (timer) {
-      stdout.write('\r$content ${_frames[_counter % _frames.length]}');
-      _counter++;
-    });
+  while (!(step is AtomicStep)) {
+    step = step.configure(environment.config);
+    print("a");
   }
+  AtomicStep atomic = step;
 
-  @override
-  void remove() {
-    _timer?.cancel();
-    stdout.write('\r');
-    stdout.write(content + "\n");
+  Response response = Response(message: "Nothing was executed.");
+  while (true) {
+    response = await atomic.execute(environment);
+    print("Execute ${atomic.name}");
+    if (response.isError ||
+        atomic.next == null) {
+      break;
+    }
+    atomic = atomic.next!;
   }
+  return response;
 }
 
-class TextMessage extends Message {
-  const TextMessage(super.content);
-  @override
-  void add() {
-    stdout.writeln(content);
-  }
-}
 
 class Message {
   const Message(this.content);
   final String content;
-  void add() {}
-  void remove() {}
+  bool get isOpen => false;
+  void open(IOSink sink) => sink.writeln(content);
+  void close() {}
 }

@@ -1,39 +1,52 @@
-
 import 'dart:async';
 import 'dart:io';
 
-class ProcessSpinner {
+import 'package:stepflow/environment.dart';
+
+class SpinnerMessage extends Message {
   final List<String> _frames;
 
   Timer? _timer;
   int _counter = 0;
 
-  ProcessSpinner({
-    List<String> frames = const [
-      '⠋',
-      '⠙',
-      '⠹',
-      '⠸',
-      '⠼',
-      '⠴',
-      '⠦',
-      '⠧',
-      '⠇',
-      '⠏',
-    ],
-  }) : _frames = frames;
+  SpinnerMessage(
+      super.content, {
+        List<String> frames = const [
+          '⠋',
+          '⠙',
+          '⠹',
+          '⠸',
+          '⠼',
+          '⠴',
+          '⠦',
+          '⠧',
+          '⠇',
+          '⠏',
+        ],
+      }) : _frames = frames;
 
-  void start([String message = '']) {
+  @override
+  bool get isOpen => _timer?.isActive ?? false;
+
+  IOSink? sink;
+  @override
+  void open(IOSink sink) {
+    this.sink = sink;
     _counter = 0;
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(milliseconds: 80), (timer) {
-      stdout.write('\r$message ${_frames[_counter % _frames.length]}');
+      sink.write('\r$content ${_frames[_counter % _frames.length]}');
       _counter++;
     });
   }
 
-  void stop([String message = ""]) {
+  @override
+  void close() {
+    _timer?.cancel();
+    if (sink != null) {
+      sink!.write('\r');
+      sink!.write(content + "\n");
+    }
   }
 }
-
 

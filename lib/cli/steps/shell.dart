@@ -12,7 +12,6 @@ import 'package:stepflow/cli/spinner.dart';
 import 'package:stepflow/steps/atomics.dart';
 
 final class Shell extends ConfigureStep {
-  final ProcessSpinner? spinner;
   final String? workingDirectory;
   final bool runAsAdministrator;
   final bool runInShell;
@@ -26,7 +25,6 @@ final class Shell extends ConfigureStep {
     this.runAsAdministrator = false,
     this.runInShell = false,
     this.workingDirectory,
-    this.spinner,
   });
 
   final Uuid uuid = const Uuid();
@@ -83,7 +81,6 @@ final class Shell extends ConfigureStep {
   @override
   Step configure(final Config config) =>
       Runnable(name: name, description: description, (environment) async {
-        spinner?.start();
         final result = await getProcess();
 
         if (runAsAdministrator && Platform.isWindows) {
@@ -99,16 +96,7 @@ final class Shell extends ConfigureStep {
           check();
           await completer.future;
         }
-
-        if (spinner == null) {
-          void Function(String) writeln = (data) {
-            stdout.writeln(data.trim());
-          };
-          result.stdout.transform(utf8.decoder).listen(writeln);
-          result.stderr.transform(utf8.decoder).listen(writeln);
-        }
-        spinner?.stop();
-        return Response();
+        return Response(isError: !(await result.stderr.isEmpty));
       });
 
   @override

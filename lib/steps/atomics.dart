@@ -4,7 +4,6 @@ import 'package:stepflow/environment.dart';
 import 'package:stepflow/response.dart';
 import 'package:stepflow/config.dart';
 
-
 /**
  * The blueprint for a atomic, representation of a step inside the workflows.
  */
@@ -28,7 +27,11 @@ abstract class Step {
  * After configuration the configured steps will be parsed into their smallest parts [AtomicSteps].
  */
 abstract class AtomicStep extends Step {
-  AtomicStep({required super.name, required super.description});
+  AtomicStep({
+    required super.name,
+    required super.description,
+    this.ignoreFailure = false,
+  });
 
   /**
    * After configuration, every step links to its descendant.
@@ -37,6 +40,7 @@ abstract class AtomicStep extends Step {
    * if it would be the last of the chain.
    */
   AtomicStep? next;
+  final bool ignoreFailure;
 
   @override
   Step configure(final Config config) => this;

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
+
 import 'package:stepflow/config.dart';
 import 'package:stepflow/response.dart';
 import 'package:stepflow/steps/atomics.dart';
@@ -49,7 +50,7 @@ final class Install extends ConfigureStep {
   @override
   Step configure(Config config) {
     return Runnable(
-          (environment) {
+      (environment) {
         try {
           final Directory workDirectory = Directory(path.joinAll(binariesPath));
           for (final entity in workDirectory.listSync()) {
@@ -105,5 +106,3 @@ final class Install extends ConfigureStep {
     );
   }
 }
-
-
