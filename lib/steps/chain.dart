@@ -1,4 +1,4 @@
-import 'package:stepflow/config.dart';
+
 import 'package:stepflow/steps/atomics.dart';
 import 'package:stepflow/steps/skipped.dart';
 
@@ -15,12 +15,12 @@ final class Chain extends ConfigureStep {
       );
 
   @override
-  Step configure(Config config) {
+  Step configure() {
     if (_steps.isEmpty) return Skipped();
     final List<AtomicStep> atomicSteps = [];
     for (Step step in _steps) {
       while (!(step is AtomicStep)) {
-        step = step.configure(config);
+        step = step.configure();
       }
       atomicSteps.add(step);
     }
@@ -36,7 +36,11 @@ final class Chain extends ConfigureStep {
   }
 
   @override
-  Map<String, dynamic> toJson() =>
-      {"steps": _steps.map<Map<String, dynamic>>((step) => step.toJson())}
-        ..addAll(super.toJson());
+  Map<String, dynamic> toJson() {
+    final List<Map<String, dynamic>> jsonList = [];
+    _steps.forEach((step) {
+      jsonList.add(step.toJson());
+    });
+    return {"steps": jsonList};
+  }
 }

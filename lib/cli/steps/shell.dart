@@ -1,14 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
 import 'package:stepflow/steps/runnable.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:stepflow/config.dart';
 import 'package:stepflow/response.dart';
-import 'package:stepflow/cli/spinner.dart';
 import 'package:stepflow/steps/atomics.dart';
 
 final class Shell extends ConfigureStep {
@@ -79,10 +76,13 @@ final class Shell extends ConfigureStep {
   );
 
   @override
-  Step configure(final Config config) =>
-      Runnable(name: name, description: description, (environment) async {
-        final result = await getProcess();
-
+  Step configure() =>
+      Runnable(name: name, description: description, (context) async {
+        final process = await getProcess();
+        await Future.wait([
+          stdout.addStream(process.stdout),
+          stderr.addStream(process.stderr)
+        ]);
         if (runAsAdministrator && Platform.isWindows) {
           final Completer completer = Completer();
           late final void Function() check;
@@ -96,15 +96,16 @@ final class Shell extends ConfigureStep {
           check();
           await completer.future;
         }
-        return Response(isError: !(await result.stderr.isEmpty));
       });
 
   @override
   Map<String, dynamic> toJson() => {
-    "program": program,
-    "arguments": arguments,
+    "name": name,
+    "description": description,
     "run_as_administrator": runAsAdministrator,
     "run_in_shell": runInShell,
     if (workingDirectory != null) "working_directory": workingDirectory,
-  }..addAll(super.toJson());
+    "program": program,
+    "arguments": arguments,
+  };
 }

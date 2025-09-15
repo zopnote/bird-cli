@@ -1,9 +1,8 @@
-import 'package:stepflow/config.dart';
 import 'package:stepflow/steps/atomics.dart';
 import 'package:stepflow/steps/skipped.dart';
 
 class Conditional extends ConfigureStep {
-  final bool Function(Config) condition;
+  final bool condition;
   final Step child;
   const Conditional({required this.condition, required this.child})
     : super(
@@ -13,5 +12,5 @@ class Conditional extends ConfigureStep {
       );
 
   @override
-  Step configure(Config config) => condition(config) ? child : Skipped();
+  Step configure() => condition ? child : Skipped();
 }

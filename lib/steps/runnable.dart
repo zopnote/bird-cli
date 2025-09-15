@@ -1,15 +1,15 @@
 import 'dart:async';
-import 'package:meta/meta.dart';
 
-import '../environment.dart';
+import '../workflow.dart';
 import '../response.dart';
 import 'atomics.dart';
 
-class Runnable extends AtomicStep {
-  final FutureOr<Response> Function(Environment environment) run;
+final class Runnable extends AtomicStep {
+  final FutureOr<Response?> Function(FlowContext environment) run;
   Runnable(this.run, {required super.name, required super.description});
 
   @override
-  @protected
-  FutureOr<Response> execute(final Environment environment) => run(environment);
+  FutureOr<Response?> execute(final FlowContext environment) {
+    return run(environment);
+  }
 }

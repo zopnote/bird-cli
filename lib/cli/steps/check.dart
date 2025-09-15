@@ -2,7 +2,6 @@
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
-import 'package:stepflow/config.dart';
 import 'package:stepflow/response.dart';
 import 'package:stepflow/steps/atomics.dart';
 import 'package:stepflow/steps/runnable.dart';
@@ -17,7 +16,7 @@ final class Check extends ConfigureStep {
   });
 
   @override
-  Step configure(final Config config) => Runnable(
+  Step configure() => Runnable(
         (environment) {
       final String executableExtension = Platform.isWindows ? ".exe" : "";
       final List<String> pathVariableEntries =

@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:stepflow/environment.dart';
+import 'package:stepflow/workflow.dart';
 import 'package:stepflow/response.dart';
-import 'package:stepflow/config.dart';
 
 /**
  * The blueprint for a atomic, representation of a step inside the workflows.
@@ -13,8 +12,8 @@ abstract class Step {
 
   const Step({required this.name, required this.description});
 
-  Step configure(final Config config);
-  FutureOr<Response> execute(final Environment environment);
+  Step configure();
+  FutureOr<Response?> execute(final FlowContext context);
 
   Map<String, dynamic> toJson() => {"name": name, "description": description};
 }
@@ -43,7 +42,7 @@ abstract class AtomicStep extends Step {
   final bool ignoreFailure;
 
   @override
-  Step configure(final Config config) => this;
+  Step configure() => this;
 
   @override
   Map<String, dynamic> toJson() => {}
@@ -55,6 +54,11 @@ abstract class ConfigureStep extends Step {
   const ConfigureStep({required super.name, required super.description});
 
   @override
-  FutureOr<Response> execute(final Environment environment) =>
-      configure(Config()).execute(environment);
+  FutureOr<Response?> execute(final FlowContext context) =>
+      configure().execute(context);
+
+  @override
+  Map<String, dynamic> toJson() => {}
+    ..addAll(super.toJson())
+    ..addAll({"subordinate": configure().toJson()});
 }

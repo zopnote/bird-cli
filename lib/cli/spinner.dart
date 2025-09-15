@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:stepflow/environment.dart';
+import 'package:stepflow/workflow.dart';
 
 class SpinnerMessage extends Message {
   final List<String> _frames;

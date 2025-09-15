@@ -1,3 +1,0 @@
-class Config {
-  const Config();
-}
