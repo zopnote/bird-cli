@@ -2,9 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
-import 'package:stepflow/response.dart';
-import 'package:stepflow/steps/atomics.dart';
-import 'package:stepflow/steps/runnable.dart';
+import 'package:stepflow/common.dart';
 
 final class Install extends ConfigureStep {
   /**
@@ -46,62 +44,71 @@ final class Install extends ConfigureStep {
     this.excludeFileWithPatterns = const [],
   });
 
+  void _forFile(File file) {
+    final String fileName = path.basenameWithoutExtension(file.path);
+    final String fileExtension = path.extension(file.path);
+    if (!files.contains(fileName) ||
+        excludeFileWithPatterns.contains(fileExtension)) {
+      return;
+    }
+    final String fileInstallPath = path.join(
+      path.joinAll(installPath),
+      path.relative(file.path, from: path.joinAll(binariesPath)),
+    );
+    final fileInstallDirectory = Directory(path.dirname(fileInstallPath));
+    if (!fileInstallDirectory.existsSync()) {
+      fileInstallDirectory.createSync(recursive: true);
+    }
+    file.copySync(fileInstallPath);
+  }
+
+  void _forDirectory(Directory directory) {
+    if (!directories.contains(path.basename(directory.path))) {
+      return;
+    }
+    final files = directory
+        .listSync(recursive: true)
+        .where((entity) => (entity is File))
+        .cast<File>();
+    files.forEach((file) {
+      final String fileInstallPath = path.join(
+        path.joinAll(installPath),
+        path.relative(directory.path, from: path.joinAll(binariesPath)),
+        path.relative(file.path, from: directory.path),
+      );
+      final fileInstallDirectory = Directory(path.dirname(fileInstallPath));
+      if (!fileInstallDirectory.existsSync()) {
+        fileInstallDirectory.createSync(recursive: true);
+      }
+      file.copySync(fileInstallPath);
+    });
+  }
+
   @override
   Step configure() {
-    return Runnable(
-      (environment) {
-        try {
-          final Directory workDirectory = Directory(path.joinAll(binariesPath));
-          for (final entity in workDirectory.listSync()) {
-            if (entity is File) {
-              if (!files.contains(path.basenameWithoutExtension(entity.path))) {
-                continue;
-              }
-              if (excludeFileWithPatterns.contains(
-                path.extension(entity.path),
-              )) {
-                continue;
-              }
-              final String filePath = path.join(
-                path.joinAll(installPath),
-                path.relative(entity.path, from: path.joinAll(binariesPath)),
-              );
-              final fileDirectory = Directory(path.dirname(filePath));
-              if (!fileDirectory.existsSync()) {
-                fileDirectory.createSync(recursive: true);
-              }
-              entity.copySync(filePath);
-            } else if (entity is Directory) {
-              if (!directories.contains(
-                path.basenameWithoutExtension(entity.path),
-              )) {
-                continue;
-              }
-              final files = entity
-                  .listSync(recursive: true)
-                  .where((e) => (e is File))
-                  .cast<File>();
-              for (final File file in files) {
-                final String filePath = path.join(
-                  path.joinAll(installPath),
-                  path.relative(entity.path, from: path.joinAll(binariesPath)),
-                  path.relative(file.path, from: entity.path),
-                );
-                final fileDirectory = Directory(path.dirname(filePath));
-                if (!fileDirectory.existsSync()) {
-                  fileDirectory.createSync(recursive: true);
-                }
-                file.copySync(filePath);
-              }
-            }
-          }
-          return Response();
-        } catch (e) {
-          return Response(isError: true, message: e.toString());
-        }
-      },
-      name: name,
-      description: description,
-    );
+    return Runnable(name: name, description: description, (context) {
+      try {
+        final Directory workDirectory = Directory(path.joinAll(binariesPath));
+        workDirectory.listSync().forEach((entity) {
+          if (entity is File)
+            _forFile(entity);
+          else if (entity is Directory)
+            _forDirectory(entity);
+          else
+            context.send(
+              Response(
+                message: "Only files and directories will be installed.",
+                level: ResponseLevel.warning,
+              ),
+            );
+        });
+        return Response(
+          message: "Installation complete successfully.",
+          level: ResponseLevel.status,
+        );
+      } catch (error) {
+        return Response(level: ResponseLevel.error, message: error.toString());
+      }
+    });
   }
 }

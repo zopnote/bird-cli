@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:developer';
 
-import 'package:stepflow/response.dart';
-import 'package:stepflow/steps/atomics.dart';
+import 'package:stepflow/common.dart';
 
 class Workflow {
   final Step? ancestor;
@@ -34,30 +32,36 @@ class Workflow {
    * Returns the final and last Response.
    */
   FutureOr<Response> run() async {
-    if (ancestor != null) {
-      postEvent("stepflow.tree", {"tree": ancestor!.toJson()});
-      postEvent("stepflow.tree", {"tree": chain.toJson()});
-    }
     final FlowContext context = FlowContext(
       responseSink: responses.sink,
       variables: const {},
     );
 
     AtomicStep currentStep = chain;
+    Response? response;
     while (true) {
-      await currentStep.execute(context);
+      response = await currentStep.execute(context);
+      if (response != null) {
+        responses.sink.add(response);
+      }
       if (currentStep.next == null) {
         break;
       }
       currentStep = currentStep.next!;
     }
-    return responses.stream.last;
+    return response ?? const Response(message: "", level: ResponseLevel.status);
   }
 
+  /**
+   * Listen to the messages send by the workflow
+   */
   void listen(void Function(Response) listener) =>
       responses.stream.listen(listener);
 }
 
+/**
+ *
+ */
 class FlowContext {
   final StreamSink<Response> _responseSink;
   final Map<String, dynamic> variables;
@@ -69,5 +73,7 @@ class FlowContext {
 
   operator [](String key) => variables[key];
 
+  Future<dynamic> addStream(Stream<Response> stream) =>
+      _responseSink.addStream(stream);
   void send(final Response response) => _responseSink.add(response);
 }

@@ -1,5 +1,6 @@
-import 'package:stepflow/steps/atomics.dart';
-import 'package:stepflow/steps/skipped.dart';
+
+import 'package:stepflow/common.dart';
+
 
 class Conditional extends ConfigureStep {
   final bool condition;

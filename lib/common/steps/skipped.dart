@@ -1,6 +1,6 @@
-import 'package:stepflow/workflow.dart';
-import 'package:stepflow/response.dart';
-import 'package:stepflow/steps/atomics.dart';
+
+import 'package:stepflow/common.dart';
+
 
 class Skipped extends AtomicStep {
   Skipped()

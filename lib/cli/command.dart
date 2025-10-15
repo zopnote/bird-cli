@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:stepflow/response.dart';
+import 'package:stepflow/common.dart';
+import 'package:stepflow/cli.dart';
 
-import 'flag.dart';
 
 /**
  * Represents a CLI command with optional subcommands and flags.
@@ -134,7 +134,7 @@ final class Command {
     if (response?.message.isNotEmpty ?? false) {
       stdout.writeln("\n${response!.message}");
     }
-    if (response?.isError ?? true) {
+    if (response?.level == ResponseLevel.error) {
       stderr.writeln("An error occurred.");
       return 1;
     }
@@ -221,8 +221,8 @@ final class ExecutionContext {
     final bool isError = false,
   }) {
     return Response(
-      message: (syntax ? syntaxMessage() : "") + "$message",
-      isError: isError,
+      message: (syntax ? syntaxMessage() : "") + message,
+      level: isError ? ResponseLevel.error : ResponseLevel.info,
     );
   }
 }
