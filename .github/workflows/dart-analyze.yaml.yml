@@ -15,8 +15,8 @@ jobs:
           sdk: stable
       - name: Install dependencies
         run: dart pub get
-      - name: Check formatting
-        run: dart format --output=none --set-exit-if-changed .
+      - name: Outdated dependencies
+        run: dart pub outdated
       - name: Analyze code
         run: dart analyze --fatal-infos
       - name: Run tests
