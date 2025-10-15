@@ -1,3 +1,6 @@
 ## 1.0.0
 
-- Initial version.
+- Base workflow structure
+- Essential steps
+- Commands & flags structure (cmdline)
+- CLI steps for toolchain development
