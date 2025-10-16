@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:stepflow/cli/steps/check.dart';
@@ -49,7 +50,8 @@ Future<void> runCheckTest({
     onFailure: onFailure,
     onSuccess: onSuccess,
   );
-
+  final JsonEncoder encoder = JsonEncoder.withIndent("   ");
+  printOnFailure(encoder.convert(checkStep.toJson()));
   await checkStep.execute(context);
   await controller.close();
 
