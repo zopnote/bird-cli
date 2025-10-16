@@ -17,5 +17,7 @@ jobs:
         run: dart pub get
       - name: Outdated dependencies
         run: dart pub outdated
+      - name: Run tests
+        run: dart test
       - name: Analyze code
         run: dart analyze --fatal-infos

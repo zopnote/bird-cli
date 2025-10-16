@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:stepflow/common.dart';
 
-final String _executableExtension = Platform.isWindows ? ".exe" : "";
+final String executableExtension = Platform.isWindows ? ".exe" : "";
 final List<String> _pathEntries =
     Platform.environment["PATH"]?.split(Platform.isWindows ? ";" : ":") ?? [];
 
@@ -19,10 +19,10 @@ final class Check extends ConfigureStep {
   final List<String> directories;
 
   /// Gets triggered if one or multiple programs were not found.
-  final void Function(List<String> notFound)? onFailure;
+  final void Function(FlowContext context, List<String> notFound)? onFailure;
 
   /// Gets triggered if all programs were found.
-  final void Function(void)? onSuccess;
+  final void Function(FlowContext context)? onSuccess;
 
   /// Decide if the search procedure can start processes to
   /// found programs if they aren't in the systems path.
@@ -38,23 +38,6 @@ final class Check extends ConfigureStep {
     this.searchCanStartProcesses = false,
   });
 
-  /// Returns a List with all links and files in the given directories.
-  static List<String> listContentOf(List<String> directories) {
-    final List<String> localAvailable = [];
-    for (int i = 0; i < directories.length; i++) {
-      for (final entity in Directory(directories[i]).listSync()) {
-        if ([
-          FileSystemEntityType.file,
-          FileSystemEntityType.link,
-        ].contains(entity.statSync().type))
-          continue;
-        localAvailable.add(path.basename(entity.path));
-        break;
-      }
-    }
-    return localAvailable;
-  }
-
   /**
    * Looks for the programs in the systems path variable.
    * If there isn't a match, it will be tried to start up a
@@ -65,35 +48,54 @@ final class Check extends ConfigureStep {
    */
   static List<String> search(
     List<String> programs,
-    List<String> skippable, [
+    List<String> directories, [
     bool canStartProcesses = false,
   ]) {
     final List<String> notAvailable = [];
     for (final String program in programs) {
-      if (skippable.contains(program)) continue;
       bool found = false;
+
+      for (final String directory in directories) {
+        final File programFile = File(
+          path.join(directory, program + executableExtension),
+        );
+        if (programFile.existsSync()) {
+          found = true;
+          break;
+        }
+      }
+
+      if (found) continue;
+
       for (final String pathEntry in _pathEntries) {
         final File programFile = File(
-          path.join(pathEntry, program + _executableExtension),
+          path.join(pathEntry, program + executableExtension),
         );
-        if (found = programFile.existsSync()) break;
+        found = programFile.existsSync();
+        if (found) break;
       }
-      if (found || !canStartProcesses) continue;
 
-      final result = Process.runSync(
-        program,
+      if (found) continue;
+      if (!canStartProcesses) {
+        notAvailable.add(program);
+        continue;
+      }
+
+      final ProcessResult result = Process.runSync(
+        path.basename(program),
         [],
+        workingDirectory: path.dirname(program),
         runInShell: true,
         includeParentEnvironment: true,
       );
-      if (result.exitCode == 0) continue;
+      if (result.stderr.isEmpty) continue;
       notAvailable.add(program);
     }
     return notAvailable;
   }
 
   @override
-  Step configure() => Runnable(name: name, description: description, (_) {
+  Step configure() => Runnable(name: name, description: description, (context) {
     if (programs.isEmpty) {
       return Response(
         message: "No programs received to look out for.",
@@ -103,20 +105,34 @@ final class Check extends ConfigureStep {
 
     final List<String> notAvailable = search(
       programs,
-      listContentOf(directories),
+      directories,
       searchCanStartProcesses,
     );
 
-    return Response(
-      message: notAvailable.isEmpty
-          ? "All programs were found."
-          : "The following programs aren't available: ${notAvailable.join(", ")}.",
-      level: notAvailable.isEmpty ? ResponseLevel.status : ResponseLevel.error,
-    );
+    if (notAvailable.isEmpty) {
+      if (onSuccess != null) {
+        onSuccess!(context);
+      }
+      return Response(
+        message: "All programs were found without issues.",
+        level: ResponseLevel.status,
+      );
+    } else {
+      if (onFailure != null) {
+        onFailure!(context, notAvailable);
+      }
+      return Response(
+        message:
+            "Not all programs were found. Missing are ${notAvailable.join(", ")}.",
+      );
+    }
   });
 
   @override
   Map<String, dynamic> toJson() =>
-      {"requirements": programs, "directories": directories}
-        ..addAll(super.toJson());
+      super.toJson().remove("subordinate")..addAll({
+        "programs_required": programs,
+        "directories_to_search_inside": directories,
+        "can_search_start_processes": searchCanStartProcesses,
+      });
 }
