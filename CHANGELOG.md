@@ -8,4 +8,5 @@
 ## 1.0.1
 - Added ``onFailure()`` & ``onSuccess()`` to the ``Check``-step.
 - Fixed the output of ``Check`` when ``canStartProcesses`` is set to ``false``.
+- Fixed directory look up of ``Check``.
 - Added ``Check`` unit test.
