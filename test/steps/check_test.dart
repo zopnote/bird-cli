@@ -14,9 +14,9 @@ const checkStepDescription = "Part of isolated setup to unit test the step.";
 const foundablePrograms = ["dart", "git"];
 const unavailablePrograms = ["34hbr2asd", "sad3n43"];
 final processablePrograms = [
-  "${Directory.current.path}/test/steps/check/testprogram",
+  Directory.current.path + "/test/steps/check/testprogram",
 ];
-final directories = ["${Directory.current.path}/test/steps/check"];
+final directories = [Directory.current.path + "/test/steps/check"];
 const foundableInDirectoriesPrograms = ["testprogram"];
 
 final onFailure = (FlowContext context, List<String> _) {
@@ -80,6 +80,7 @@ void main() {
       "compile",
       "exe",
       "testprogram.dart",
+      "-o", testprogram
     ], workingDirectory: assetDirectory);
   }
 
