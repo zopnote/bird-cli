@@ -20,14 +20,10 @@ final directories = [Directory.current.path + "/test/steps/check"];
 const foundableInDirectoriesPrograms = ["testprogram"];
 
 final onFailure = (FlowContext context, List<String> _) {
-  context.send(
-    const Response(message: failurePattern, level: ResponseLevel.status),
-  );
+  context.send(const Response(failurePattern));
 };
 final onSuccess = (FlowContext context) {
-  context.send(
-    const Response(message: successPattern, level: ResponseLevel.status),
-  );
+  context.send(const Response(successPattern));
 };
 
 Future<void> runCheckTest({
@@ -37,13 +33,11 @@ Future<void> runCheckTest({
   required bool expectedToFail,
 }) async {
   final controller = StreamController<Response>();
-  final context = FlowContext(responseSink: controller.sink, variables: {});
   String responseMessages = "";
-  controller.stream.listen((r) => responseMessages += r.message);
+  final context = FlowContext.observed((r) => responseMessages += r.message);
 
   final checkStep = Check(
     name: checkStepName,
-    description: checkStepDescription,
     programs: programs,
     searchCanStartProcesses: searchCanStartProcesses,
     directories: directories,
@@ -80,7 +74,8 @@ void main() {
       "compile",
       "exe",
       "testprogram.dart",
-      "-o", testprogram
+      "-o",
+      testprogram,
     ], workingDirectory: assetDirectory);
   }
 

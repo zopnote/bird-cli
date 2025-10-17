@@ -28,9 +28,9 @@ final class Check extends ConfigureStep {
   /// found programs if they aren't in the systems path.
   final bool searchCanStartProcesses;
 
+  final String name;
   const Check({
-    required super.name,
-    required super.description,
+    required this.name,
     required this.programs,
     this.directories = const [],
     this.onFailure,
@@ -95,11 +95,11 @@ final class Check extends ConfigureStep {
   }
 
   @override
-  Step configure() => Runnable(name: name, description: description, (context) {
+  Step configure() => Runnable(name: name, (context) {
     if (programs.isEmpty) {
       return Response(
-        message: "No programs received to look out for.",
-        level: ResponseLevel.status,
+        "No programs received to look out for.",
+        Level.verbose,
       );
     }
 
@@ -113,17 +113,14 @@ final class Check extends ConfigureStep {
       if (onSuccess != null) {
         onSuccess!(context);
       }
-      return Response(
-        message: "All programs were found without issues.",
-        level: ResponseLevel.status,
-      );
+      return Response("All programs were found without issues.");
     } else {
       if (onFailure != null) {
         onFailure!(context, notAvailable);
       }
       return Response(
-        message:
-            "Not all programs were found. Missing are ${notAvailable.join(", ")}.",
+        "Not all programs were found. Missing are ${notAvailable.join(", ")}.",
+        Level.verbose,
       );
     }
   });

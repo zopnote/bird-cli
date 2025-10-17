@@ -34,9 +34,10 @@ final class Install extends ConfigureStep {
    * With .lib the text.lib won't be installed.
    */
   final List<String> excludeFileWithPatterns;
+
+  final String name;
   Install({
-    required super.name,
-    required super.description,
+    required this.name,
     this.installPath = const [],
     this.binariesPath = const [],
     this.files = const [],
@@ -86,7 +87,7 @@ final class Install extends ConfigureStep {
 
   @override
   Step configure() {
-    return Runnable(name: name, description: description, (context) {
+    return Runnable(name: name, (context) {
       try {
         final Directory workDirectory = Directory(path.joinAll(binariesPath));
         workDirectory.listSync().forEach((entity) {
@@ -97,17 +98,17 @@ final class Install extends ConfigureStep {
           else
             context.send(
               Response(
-                message: "Only files and directories will be installed.",
-                level: ResponseLevel.warning,
+                "Only files and directories will be installed.",
+                Level.verbose,
               ),
             );
         });
         return Response(
-          message: "Installation complete successfully.",
-          level: ResponseLevel.status,
+          "Installation complete successfully.",
+          Level.verbose,
         );
       } catch (error) {
-        return Response(level: ResponseLevel.error, message: error.toString());
+        return Response(error.toString(), Level.verbose);
       }
     });
   }

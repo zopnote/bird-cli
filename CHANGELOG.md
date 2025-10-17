@@ -10,3 +10,6 @@
 - Fixed the output of ``Check`` when ``canStartProcesses`` is set to ``false``.
 - Fixed directory look up of ``Check``.
 - Added ``Check`` unit test.
+
+## 1.0.2
+- Added ``FlowContext.stopWorkflow(Response message)`` to end a workflow on critical errors.

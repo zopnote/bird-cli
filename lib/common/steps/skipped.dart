@@ -1,17 +1,17 @@
+import 'dart:async';
 
 import 'package:stepflow/common.dart';
 
-
-class Skipped extends AtomicStep {
-  Skipped()
-      : super(
-    name: "Skipped step",
-    description: "A step that represents no action.",
-  );
+class Skipped extends Step {
+  const Skipped();
   @override
-  Response execute(final FlowContext environment) {
-    return Response();
+  FutureOr<Step?> execute(
+    final FlowContext context, [
+    FutureOr<Step?> candidate()?,
+  ]) {
+    return (candidate ?? () => null)();
   }
+
   @override
   Map<String, dynamic> toJson() => {};
 }

@@ -134,7 +134,7 @@ final class Command {
     if (response?.message.isNotEmpty ?? false) {
       stdout.writeln("\n${response!.message}");
     }
-    if (response?.level == ResponseLevel.error) {
+    if (response?.level == Level.error) {
       stderr.writeln("An error occurred.");
       return 1;
     }
@@ -221,8 +221,8 @@ final class ExecutionContext {
     final bool isError = false,
   }) {
     return Response(
-      message: (syntax ? syntaxMessage() : "") + message,
-      level: isError ? ResponseLevel.error : ResponseLevel.info,
+      (syntax ? syntaxMessage() : "") + message,
+      isError ? Level.error : Level.status,
     );
   }
 }

@@ -1,15 +1,25 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
+
 import '../workflow.dart';
-import '../response.dart';
 import 'atomics.dart';
 
-final class Runnable extends AtomicStep {
-  final FutureOr<Response?> Function(FlowContext environment) run;
-  Runnable(this.run, {required super.name, required super.description});
+final class Runnable extends Step {
+  final FutureOr<void> Function(FlowContext context) run;
+  final String name;
+  Runnable(this.run, {required this.name});
+
+  @protected
+  @override
+  Future<Step?> execute(
+    final FlowContext context, [
+    FutureOr<Step?> candidate()?,
+  ]) async {
+    await run(context);
+    return (candidate ?? () => null)();
+  }
 
   @override
-  FutureOr<Response?> execute(final FlowContext environment) {
-    return run(environment);
-  }
+  Map<String, dynamic> toJson() => {"type": "runnable", "name": name};
 }

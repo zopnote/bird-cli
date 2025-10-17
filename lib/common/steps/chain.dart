@@ -1,46 +1,42 @@
-
 import 'package:stepflow/common.dart';
+import 'package:stepflow/common/steps/bubble.dart';
 
 
-final class Chain extends ConfigureStep {
-  final List<Step> _steps;
 
-  const Chain({required final List<Step> steps})
-      : _steps = steps,
-        super(
-        name: "Execute chained steps",
-        description:
-        "A step containing chained subordinary steps. "
-            "Steps may depend on each other.",
-      );
+final class Chain extends Bubble {
+  late final Step Function(int index) build;
+  final int? length;
 
+  Chain._internal({required this.build, required this.length});
+
+  factory Chain({required List<Step> steps}) {
+    return Chain._internal(
+      build: (index) {
+        return steps[index];
+      },
+      length: steps.length,
+    );
+  }
+
+  factory Chain.builder(Step builder(int index), {final int? length}) {
+    return Chain._internal(build: builder, length: length);
+  }
+
+  int index = 0;
   @override
-  Step configure() {
-    if (_steps.isEmpty) return Skipped();
-    final List<AtomicStep> atomicSteps = [];
-    for (Step step in _steps) {
-      while (!(step is AtomicStep)) {
-        step = step.configure();
-      }
-      atomicSteps.add(step);
+  Step builder() {
+    if (length == null) {
+      return build(index++);
     }
-    AtomicStep step = atomicSteps.first;
-    for (int i = 0; i < atomicSteps.length - 1; i++) {
-      if (i >= atomicSteps.length - 1) {
-        continue;
-      }
-      step.next = atomicSteps[i + 1];
-      step = step.next!;
+    if (index == length! - 1) {
+      leave = true;
+      return build(index++);
     }
-    return atomicSteps.first;
+    return build(index++);
   }
 
   @override
-  Map<String, dynamic> toJson() {
-    final List<Map<String, dynamic>> jsonList = [];
-    _steps.forEach((step) {
-      jsonList.add(step.toJson());
-    });
-    return {"steps": jsonList};
-  }
+  Map<String, dynamic> toJson() => {
+    "type": "chain"
+  };
 }

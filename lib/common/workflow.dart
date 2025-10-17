@@ -2,78 +2,44 @@ import 'dart:async';
 
 import 'package:stepflow/common.dart';
 
-class Workflow {
-  final Step? ancestor;
-  final AtomicStep chain;
-  final StreamController<Response> responses = StreamController.broadcast(
-    sync: true,
-    onListen: () {},
-    onCancel: () {},
-  );
-
-  Workflow({required this.chain, this.ancestor});
-
-  factory Workflow.from(final Step step) {
-    Step currentStep = step;
-    while (true) {
-      currentStep = currentStep.configure();
-      if (currentStep is AtomicStep) {
-        break;
-      }
-    }
-    final AtomicStep atomicStep = currentStep;
-    return Workflow(ancestor: step, chain: atomicStep);
+Future<void> runWorkflow(Step step, [void Function(Response)? onData]) async {
+  final FlowContext context = FlowContext.observed(onData ?? (_) {});
+  Step? next = step;
+  while (next != null) {
+    print(next.runtimeType);
+    next = await next.execute(context);
   }
-
-  /**
-   * Executes an workflow based on the entry step provided in this function.
-   * [run] configures the steps to atomic steps and then execute them chronologically.
-   *
-   * Returns the final and last Response.
-   */
-  FutureOr<Response> run() async {
-    final FlowContext context = FlowContext(
-      responseSink: responses.sink,
-      variables: const {},
-    );
-
-    AtomicStep currentStep = chain;
-    Response? response;
-    while (true) {
-      response = await currentStep.execute(context);
-      if (response != null) {
-        responses.sink.add(response);
-      }
-      if (currentStep.next == null) {
-        break;
-      }
-      currentStep = currentStep.next!;
-    }
-    return response ?? const Response(message: "", level: ResponseLevel.status);
-  }
-
-  /**
-   * Listen to the messages send by the workflow
-   */
-  void listen(void Function(Response) listener) =>
-      responses.stream.listen(listener);
 }
 
 /**
  *
  */
 class FlowContext {
-  final StreamSink<Response> _responseSink;
-  final Map<String, dynamic> variables;
+  final StreamController<Response> responses;
+  int _depth = 0;
+  int get depth => _depth;
+  FlowContext(this.responses);
+  factory FlowContext.observed(void Function(Response)? onData) {
+    return FlowContext(StreamController.broadcast(sync: true));
+  }
+  void increaseDepth() => _depth++;
+  void decreaseDepth() => _depth--;
 
-  FlowContext({
-    required StreamSink<Response> responseSink,
-    required this.variables,
-  }) : _responseSink = responseSink;
-
-  operator [](String key) => variables[key];
+  void pop(final String message) {
+    responses.sink.add(Response(message, Level.error));
+    _depth--;
+  }
 
   Future<dynamic> addStream(Stream<Response> stream) =>
-      _responseSink.addStream(stream);
-  void send(final Response response) => _responseSink.add(response);
+      responses.sink.addStream(stream);
+
+  void send(final Response response) => responses.sink.add(response);
+
+  Future<Response> close() async {
+    await responses.close();
+    return responses.stream.lastWhere(
+      (_) => true,
+      orElse: () => const Response(),
+    );
+  }
 }

@@ -34,9 +34,9 @@ final class Shell extends ConfigureStep {
   /// Function that will be executed every time the process' stderr receives text.
   final FutureOr<void> Function(List<int> chars, FlowContext context)? onStderr;
 
+  final String name;
   const Shell({
-    required super.name,
-    required super.description,
+    required this.name,
     required this.program,
     required this.arguments,
     this.onStdout,
@@ -113,9 +113,7 @@ final class Shell extends ConfigureStep {
   );
 
   @override
-  Step configure() => Runnable(name: name, description: description, (
-    context,
-  ) async {
+  Step configure() => Runnable(name: name, (context) async {
     final process = await getProcess();
 
     final List<Future<void>> futures = [];
@@ -139,20 +137,19 @@ final class Shell extends ConfigureStep {
     if (runAsAdministrator && Platform.isWindows) {
       await _windowsWaitForPowershell();
     }
-
-    if (fullStderr.isNotEmpty) {
-      return Response(message: "An error occurred in the process: $fullStderr");
-    }
-    return Response(
-      message: "Shell step executed without any issues.",
-      level: ResponseLevel.status,
+    context.send(
+      Response(
+        fullStderr.isNotEmpty
+            ? "An error occurred in the process: $fullStderr"
+            : "Shell step executed without any issues.",
+        Level.verbose,
+      ),
     );
   });
 
   @override
   Map<String, dynamic> toJson() => {
     "name": name,
-    "description": description,
     "run_as_administrator": runAsAdministrator,
     "run_in_shell": runInShell,
     if (workingDirectory != null) "working_directory": workingDirectory,

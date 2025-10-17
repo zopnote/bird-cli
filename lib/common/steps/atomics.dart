@@ -1,64 +1,56 @@
 import 'dart:async';
 
+import 'package:stepflow/cli.dart';
 import 'package:stepflow/common.dart';
 
-
 /**
- * The blueprint for a atomic, representation of a step inside the workflows.
+ * The blueprint for an atomic, representation of a step inside the workflows.
  */
 abstract class Step {
-  final String name;
-  final String description;
-
-  const Step({required this.name, required this.description});
-
-  Step configure();
-  FutureOr<Response?> execute(final FlowContext context);
-
-  Map<String, dynamic> toJson() => {"name": name, "description": description};
-}
-
-/**
- * Smallest mutable unit of the steps flow logic.
- * Derived classes have to override the execution function because an [AtomicStep]
- * is the smallest unit, and the only unit that is executable.
- *
- * After configuration the configured steps will be parsed into their smallest parts [AtomicSteps].
- */
-abstract class AtomicStep extends Step {
-  AtomicStep({
-    required super.name,
-    required super.description,
-    this.ignoreFailure = false,
-  });
-
-  /**
-   * After configuration, every step links to its descendant.
-   *
-   * Before configuration step will be [null], after it will only be [null]
-   * if it would be the last of the chain.
-   */
-  AtomicStep? next;
-  final bool ignoreFailure;
-
-  @override
-  Step configure() => this;
-
-  @override
-  Map<String, dynamic> toJson() => {}
-    ..addAll(super.toJson())
-    ..addAll({if (next != null) "next": next!.toJson()});
+  const Step();
+  FutureOr<Step?> execute(final FlowContext context, [FutureOr<Step?> candidate()?]);
+  Map<String, dynamic> toJson();
 }
 
 abstract class ConfigureStep extends Step {
-  const ConfigureStep({required super.name, required super.description});
+  const ConfigureStep();
+
+  Step configure();
 
   @override
-  FutureOr<Response?> execute(final FlowContext context) =>
-      configure().execute(context);
+  FutureOr<Step?> execute(final FlowContext context, [FutureOr<Step?> candidate()?]) =>
+      this.configure().execute(context, candidate);
 
   @override
-  Map<String, dynamic> toJson() => {}
-    ..addAll(super.toJson())
-    ..addAll({"subordinate": configure().toJson()});
+  Map<String, dynamic> toJson() => {};
+}
+
+/** ----------------------------------------------------------------------------- [NOTE]
+ * It is important to notice, that an atomic step has to be capable of manipulating the execution
+ * order as well as only run some code. We want to lazy configure steps and therefore the
+ * configuration has to be part of the execution manipulation.
+ *
+ * ConfigureStep will just be a step, that will reduce its own components by itself down to atomics.
+ */
+
+class Test extends ConfigureStep {
+  @override
+  Step configure() {
+    return Chain.builder((index) {
+      if (index == 0) {
+        return Chain(
+          steps: [
+            Shell(
+              name: "Gets the version of Dart SDK",
+              program: "dart",
+              arguments: ["--version"],
+            ),
+          ],
+        );
+      }
+      return Runnable(name: "Print out hello world", (context) {
+        print("Hello world");
+      });
+    }, length: 5);
+  }
 }
