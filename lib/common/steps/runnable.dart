@@ -5,8 +5,14 @@ import 'package:meta/meta.dart';
 import '../workflow.dart';
 import 'atomics.dart';
 
+/**
+ * Executes the [run] function and returns the next [Step].
+ */
 final class Runnable extends Step {
+  /// Function that will be run at [Step] execution.
   final FutureOr<void> Function(FlowContext context) run;
+
+  /// Nametag of what this [Step] does.
   final String name;
   Runnable(this.run, {required this.name});
 

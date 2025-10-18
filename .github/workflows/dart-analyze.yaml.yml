@@ -13,11 +13,11 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      - name: Analyze code
+        run: dart analyze --fatal-infos
       - name: Install dependencies
         run: dart pub get
       - name: Outdated dependencies
         run: dart pub outdated
       - name: Run tests
         run: dart test
-      - name: Analyze code
-        run: dart analyze --fatal-infos
