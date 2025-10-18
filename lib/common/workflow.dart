@@ -12,6 +12,7 @@ class FlowContextController {
   int depth = 0;
   final StreamController<Response> responses;
   late final FlowContext context;
+
   FlowContextController(this.responses) {
     context = FlowContext(
       (value) => depth = value,
@@ -19,6 +20,7 @@ class FlowContextController {
       sink: responses.sink,
     );
   }
+
   factory FlowContextController.observed(void Function(Response)? onData) {
     final StreamController<Response> controller = StreamController.broadcast(
       sync: true,

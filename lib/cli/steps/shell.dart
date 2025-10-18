@@ -29,10 +29,10 @@ final class Shell extends ConfigureStep {
   final List<String> arguments;
 
   /// Function that will be executed every time the process' stdout receives text.
-  final FutureOr<void> Function(List<int> chars, FlowContext context)? onStdout;
+  final FutureOr<void> Function(FlowContext context, List<int> chars)? onStdout;
 
   /// Function that will be executed every time the process' stderr receives text.
-  final FutureOr<void> Function(List<int> chars, FlowContext context)? onStderr;
+  final FutureOr<void> Function(FlowContext context, List<int> chars)? onStderr;
 
   final String name;
   const Shell({
@@ -119,14 +119,14 @@ final class Shell extends ConfigureStep {
     final List<Future<void>> futures = [];
     process.stdout.listen((chars) {
       if (onStdout != null) {
-        futures.add(Future.value(onStdout!(chars, context)));
+        futures.add(Future.value(onStdout!(context, chars)));
       }
     });
 
     String fullStderr = "";
     process.stderr.listen((chars) {
       if (onStderr != null) {
-        futures.add(Future.value(onStderr!(chars, context)));
+        futures.add(Future.value(onStderr!(context, chars)));
       }
       fullStderr += "\n${String.fromCharCodes(chars)}";
     });
