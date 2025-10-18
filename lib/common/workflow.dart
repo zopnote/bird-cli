@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:stepflow/common.dart';
 
 Future<void> runWorkflow(Step step, [void Function(Response)? onData]) async {
-  await step.execute(FlowContextController.observed(onData ?? (_) {}));
+  final FlowContextController controller = FlowContextController.observed(onData ?? (_) {});
+  await step.execute(controller);
+  await controller.close();
 }
 
 class FlowContextController {

@@ -32,9 +32,7 @@ Future<void> runCheckTest({
   required bool searchCanStartProcesses,
   required bool expectedToFail,
 }) async {
-  final controller = StreamController<Response>();
   String responseMessages = "";
-  final context = FlowContextController.observed((r) => responseMessages += r.message);
 
   final checkStep = Check(
     name: checkStepName,
@@ -44,10 +42,9 @@ Future<void> runCheckTest({
     onFailure: onFailure,
     onSuccess: onSuccess,
   );
+  runWorkflow(checkStep, (r) => responseMessages += r.message);
   final JsonEncoder encoder = JsonEncoder.withIndent("   ");
   printOnFailure(encoder.convert(checkStep.toJson()));
-  await checkStep.execute(context);
-  await controller.close();
 
   expect(
     responseMessages.contains(expectedToFail ? failurePattern : successPattern),
