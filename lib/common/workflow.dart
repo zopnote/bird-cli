@@ -3,37 +3,29 @@ import 'dart:async';
 import 'package:stepflow/common.dart';
 
 Future<void> runWorkflow(Step step, [void Function(Response)? onData]) async {
-  final FlowContext context = FlowContext.observed(onData ?? (_) {});
-  Step? next = step;
-  while (next != null) {
-    print(next.runtimeType);
-    next = await next.execute(context);
-  }
+  await step.execute(FlowContextController.observed(onData ?? (_) {}));
 }
 
-/**
- *
- */
-class FlowContext {
+class FlowContextController {
+  int depth = 0;
   final StreamController<Response> responses;
-  int _depth = 0;
-  int get depth => _depth;
-  FlowContext(this.responses);
-  factory FlowContext.observed(void Function(Response)? onData) {
-    return FlowContext(StreamController.broadcast(sync: true));
+  late final FlowContext context;
+  FlowContextController(this.responses) {
+    context = FlowContext(
+      (value) => depth = value,
+      () => depth,
+      sink: responses.sink,
+    );
   }
-  void increaseDepth() => _depth++;
-  void decreaseDepth() => _depth--;
-
-  void pop(final String message) {
-    responses.sink.add(Response(message, Level.error));
-    _depth--;
+  factory FlowContextController.observed(void Function(Response)? onData) {
+    final StreamController<Response> controller = StreamController.broadcast(
+      sync: true,
+    );
+    if (onData != null) {
+      controller.stream.listen(onData);
+    }
+    return FlowContextController(controller);
   }
-
-  Future<dynamic> addStream(Stream<Response> stream) =>
-      responses.sink.addStream(stream);
-
-  void send(final Response response) => responses.sink.add(response);
 
   Future<Response> close() async {
     await responses.close();
@@ -42,4 +34,26 @@ class FlowContext {
       orElse: () => const Response(),
     );
   }
+}
+
+/**
+ *
+ */
+class FlowContext {
+  final void Function(int value) _setDepth;
+  final int Function() _getDepth;
+  final StreamSink<Response> sink;
+  FlowContext(this._setDepth, this._getDepth, {required this.sink});
+
+  void pop(final String message) {
+    sink.add(Response(message, Level.error));
+    _setDepth(_getDepth() - 1);
+  }
+
+  void close(final String message) {
+    sink.add(Response(message, Level.critical));
+    _setDepth(0);
+  }
+
+  void send(final Response response) => sink.add(response);
 }

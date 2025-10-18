@@ -13,20 +13,21 @@ abstract class Bubble extends Step {
 
   @override
   FutureOr<Step?> execute(
-    final FlowContext context, [
+    final FlowContextController controller, [
     FutureOr<Step?> candidate()?,
   ]) async {
-    context.increaseDepth();
-    final int chainsDepth = context.depth;
-    return builder().execute(context, () async {
-      if (chainsDepth < context.depth) {
+    controller.depth++;
+    final int chainsDepth = controller.depth;
+    FutureOr<Step?> decide() async {
+      if (chainsDepth > controller.depth) {
         return (candidate ?? () => null)();
       }
       if (leave) {
-        context.decreaseDepth();
+        controller.depth--;
         return (candidate ?? () => null)();
       }
-      return await builder();
-    });
+      return builder().execute(controller, decide);
+    }
+    return decide();
   }
 }

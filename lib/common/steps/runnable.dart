@@ -13,10 +13,10 @@ final class Runnable extends Step {
   @protected
   @override
   Future<Step?> execute(
-    final FlowContext context, [
+    final FlowContextController controller, [
     FutureOr<Step?> candidate()?,
   ]) async {
-    await run(context);
+    await run(controller.context);
     return (candidate ?? () => null)();
   }
 

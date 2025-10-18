@@ -6,7 +6,7 @@ class Skipped extends Step {
   const Skipped();
   @override
   FutureOr<Step?> execute(
-    final FlowContext context, [
+    final FlowContextController controller, [
     FutureOr<Step?> candidate()?,
   ]) {
     return (candidate ?? () => null)();

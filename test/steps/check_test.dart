@@ -34,7 +34,7 @@ Future<void> runCheckTest({
 }) async {
   final controller = StreamController<Response>();
   String responseMessages = "";
-  final context = FlowContext.observed((r) => responseMessages += r.message);
+  final context = FlowContextController.observed((r) => responseMessages += r.message);
 
   final checkStep = Check(
     name: checkStepName,
