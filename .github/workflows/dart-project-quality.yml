@@ -1,4 +1,4 @@
-name: Dart Analyze
+name: Stability of main branch
 on:
   push:
     branches: [main]
