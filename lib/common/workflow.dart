@@ -14,6 +14,13 @@ Future<Response> runWorkflow(
   final FlowContextController controller = FlowContextController.observed(
     onData ?? (_) {},
   );
+  controller.context.send(
+    const Response("""
+  NOTICE - Stepflow isn't currently stable.
+  I uploaded it as 1.0, because I forgot to change the version number.
+  I'll just continue with this flaw and make version 2.0 the first api stable one.
+  """, Level.verbose),
+  );
   await step.execute(controller);
   return await controller.close();
 }

@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:stepflow/common.dart';
 import 'package:stepflow/cli.dart';
 
-
 /**
  * Represents a CLI command with optional subcommands and flags.
  */
@@ -38,7 +37,55 @@ final class Command {
   final List<Command> subCommands;
 
   /// Execution function invoked with the parsed context.
-  final FutureOr<Response> Function(ExecutionContext context) run;
+  final FutureOr<Response> Function(CommandInformation context) run;
+
+  List<String> _mergeArguments(List<String> rawArguments) {
+    final List<String> mergedArguments = [];
+    String mergeableArgument = "";
+    bool isOpen = false;
+    for (final String rawArgument in rawArguments) {
+      mergeableArgument += mergeableArgument.isEmpty
+          ? rawArgument
+          : " " + rawArgument;
+      for (int k = 0; k < rawArgument.length - 1; k++) {
+        final bool isIgnorable = k > 0
+            ? rawArgument[k - 1].contains("\\")
+            : false;
+        isOpen = (rawArgument[k].contains("\"") && !isIgnorable)
+            ? !isOpen
+            : isOpen;
+      }
+      if (!isOpen) {
+        mergedArguments.add(mergeableArgument);
+        mergeableArgument = "";
+      }
+    }
+    return mergedArguments;
+  }
+
+  void _parseAndSetFlags(
+    final Iterable<String> flagArgs,
+    final Iterable<Flag> flags,
+  ) {
+    for (final String flagArg in flagArgs) {
+      final List<String> parts = flagArg.split("=");
+      final String flagName = parts.first;
+      String flagValue = "";
+      if (parts.length == 1) {
+        flagValue = "true";
+      } else {
+        flagValue = flagArg.substring(flagArg.indexOf("=") + 1);
+      }
+      final Flag? flag = flags._firstWhereOrNull(
+        (flag) => flag.name == flagName,
+      );
+      if (flag == null) {
+        stdout.writeln("${flagName} is ignored in this context.");
+        continue;
+      }
+      flag.setParsed(flagValue);
+    }
+  }
 
   /**
    * Executes the command with given arguments and global flags.
@@ -53,91 +100,58 @@ final class Command {
     List<Flag> flags = command.flags;
     String argument = "";
 
-    final List<String> mergedArguments = [];
-    String mergeableArgument = "";
-    bool isOpen = false;
-    for (final String rawArgument in rawArguments) {
-      mergeableArgument += mergeableArgument.isEmpty
-          ? rawArgument
-          : " $rawArgument";
-      for (int k = 0; k < rawArgument.length - 1; k++) {
-        final bool isIgnorable = k > 0
-            ? rawArgument[k - 1].contains("\\")
-            : false;
-        isOpen = (rawArgument[k].contains("\"") && !isIgnorable)
-            ? !isOpen
-            : isOpen;
-      }
-      if (!isOpen) {
-        mergedArguments.add(mergeableArgument);
-        mergeableArgument = "";
-      }
-    }
+    final List<String> mergedArgs = _mergeArguments(rawArguments);
 
-    for (String mergedArgument in mergedArguments) {
-      if (mergedArgument.startsWith("--")) {
-        continue;
-      }
-      bool isSubCommand = false;
-      for (Command subCommand in command.subCommands) {
-        if (mergedArgument == subCommand.use) {
-          flags = subCommand.inheritFlags
-              ? subCommand.flags += flags
-              : subCommand.flags;
-          command = subCommand;
-          isSubCommand = true;
+    final Iterable<String> plainArgs = mergedArgs.where(
+      (raw) => !raw.startsWith("--"),
+    );
+
+    for (final String plainArg in plainArgs) {
+      bool isSubCmd = false;
+      for (final Command subCmd in command.subCommands) {
+        if (plainArg == subCmd.use) {
+          flags = subCmd.inheritFlags ? subCmd.flags += flags : subCmd.flags;
+          command = subCmd;
+          isSubCmd = true;
           break;
         }
       }
-      if (!isSubCommand) {
-        argument = mergedArgument;
+      if (!isSubCmd) {
+        argument = plainArg;
         break;
       }
     }
 
-    final Iterable<String> flagArguments = mergedArguments
-        .where((rawArgument) => rawArgument.startsWith("--"))
-        .map((rawArgument) => rawArgument.substring(2));
+    final Iterable<String> flagArgs = mergedArgs
+        .where((raw) => raw.startsWith("--"))
+        .map((raw) => raw.substring(2));
 
     flags += globalFlags;
-    for (final String flagArgument in flagArguments) {
-      final List<String> parts = flagArgument.split("=");
-      final String flagName = parts.first;
-      String flagValue = "";
-      if (parts.length == 1) {
-        flagValue = "true";
-      } else {
-        flagValue = flagArgument.substring(flagArgument.indexOf("=") + 1);
-      }
-      final Flag? flag = flags._firstWhereOrNull(
-        (flag) => flag.name == flagName,
-      );
-      if (flag == null) {
-        stdout.writeln("${flagName} is ignored in this context.");
-        continue;
-      }
-      flag.setParsed(flagValue);
-    }
+    _parseAndSetFlags(flagArgs, flags);
 
-    final ExecutionContext context = ExecutionContext(
+    final CommandInformation info = CommandInformation(
       command: command,
       argument: argument,
       flags: flags,
     );
+
     Response? response;
     try {
-      response = await command.run(context);
+      response = await command.run(info);
     } catch (e) {
       stderr.writeln(e);
     }
 
-    if (response?.message.isNotEmpty ?? false) {
-      stdout.writeln("\n${response!.message}");
-    }
-    if (response?.level == Level.error) {
-      stderr.writeln("An error occurred.");
+    final bool isError = response?.level == Level.error;
+    final String responseMsg = response?.message ?? "";
+
+    if (isError) {
+      stderr.writeln(
+        "An error occurred" + (responseMsg.isEmpty ? "." : ": $responseMsg"),
+      );
       return 1;
     }
+    stdout.writeln(responseMsg);
     return 0;
   }
 
@@ -170,19 +184,22 @@ final class Command {
   }
 }
 
-final class ExecutionContext {
+/**
+ *
+ */
+final class CommandInformation {
   final Command command;
   final String argument;
   final List<Flag> flags;
 
-  ExecutionContext({
+  CommandInformation({
     required this.command,
     required this.argument,
     required this.flags,
   });
 
   /// Returns a help message describing usage and available flags.
-  String syntaxMessage() {
+  String getSyntaxMessage() {
     String syntax = "";
     syntax += command.syntaxMessage(addFlags: false) + "\n";
     syntax += "Flags:\n";
@@ -221,7 +238,7 @@ final class ExecutionContext {
     final bool isError = false,
   }) {
     return Response(
-      (syntax ? syntaxMessage() : "") + message,
+      (syntax ? getSyntaxMessage() : "") + message,
       isError ? Level.error : Level.status,
     );
   }
