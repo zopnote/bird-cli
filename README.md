@@ -34,6 +34,7 @@ can have states and is able to respond to different situations.
 This opens the way for the most important step. 
 The ``Bubble extends Step``, that contains logic about 
 the execution of steps inside of it.
+
 ![workflow illustration](.images/workflow_illustration_1.png)
 The ``Chain`` step is also just
 a bubble with an indexed ``builder()``-function
@@ -43,6 +44,7 @@ With ``context.pop()`` you can always escape the current bubble
 directly with an error message. With ``context.close()`` you can exit all bubbles.
 If you want an own behaviour of execution,
 you should create a subclass of ``Bubble``.
+
 ![chain illustration](.images/chain_illustration_1.png)
 Furthermore, Stepflow has the ``ConfigureStep``, that is quite the same as a ``Widget`` for and in Flutter.
 It is a step, that will atomize itself into the steps, it is composed of. Because a workflow is also just
