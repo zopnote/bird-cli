@@ -3,7 +3,7 @@ description: |
   Dart package that provides a structural base for creating step-based, 
   modular workflows inside of applications.
 
-version: 1.0.1
+version: 2.0.0
 repository: https://github.com/zopnote/stepflow
 
 environment:

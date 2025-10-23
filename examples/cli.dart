@@ -1,16 +1,31 @@
 import 'package:stepflow/cli.dart';
-import 'package:stepflow/common.dart';
 
-String message = "";
-
-void main(List<String> args) => Command(
-  use: "example_cli",
-  description:
-      "Example arguments and flags to show off the structure of the cli tooling.",
-  run: (context) {x
-    return Response();
-  },
-  flags: [
-    BoolFlag(name: "", value: false)
-  ]
-).execute(args, globalFlags: [BoolFlag(name: "smile", value: false)]);
+Future<void> main(List<String> rawArgs) => runCommand(
+  Command(
+    use: "my_cli",
+    description: "Just a short cli example",
+    hidden: true,
+    inheritFlags: false,
+    flags: [
+      BoolFlag(name: "smile", value: false)
+    ],
+    run: (info) {
+      if (info.getFlag("smile").value) {
+        return Response(":)", Level.status);
+      }
+      return Response(info.formatSyntax(), Level.status);
+    },
+    subCommands: [
+      Command(
+        use: "greet",
+        description: "Greets the entire world.",
+        run: (info) {
+          return Response(
+            "Hello world!" + (info.getFlag("smile").value ? " :)" : ""),
+          );
+        },
+      ),
+    ],
+  ),
+  rawArgs,
+);

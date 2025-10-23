@@ -5,3 +5,4 @@
 /pubspec.lock
 /.idea/
 /test/steps/check/testprogram.exe
+/examples/cli_project_example/pubspec.lock

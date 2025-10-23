@@ -56,5 +56,7 @@ abstract class ConfigureStep extends Step {
   ]) => this.configure().execute(controller, candidate);
 
   @override
-  Map<String, dynamic> toJson() => {};
+  Map<String, dynamic> toJson() => {
+    "type": "configurable"
+  };
 }

@@ -9,13 +9,19 @@ import 'package:uuid/uuid.dart';
  * Executes a program in the systems command line.
  */
 final class Shell extends ConfigureStep {
-  /// Directory where the command line will be started from.
+  /**
+   * Directory where the command line will be started from.
+   */
   final String? workingDirectory;
 
-  /// If the program should be ran with elevated privileges.
+  /**
+   * If the program should be ran with elevated privileges.
+   */
   final bool runAsAdministrator;
 
-  /// If the program should be run in the systems command shell.
+  /**
+   * If the program should be run in the systems command shell.
+   */
   final bool runInShell;
 
   /**
@@ -25,16 +31,31 @@ final class Shell extends ConfigureStep {
    */
   final String program;
 
-  /// The command line arguments that should be applied to the command invocation.
+  /**
+   * The command line arguments that should be applied to the command invocation.
+   */
   final List<String> arguments;
 
-  /// Function that will be executed every time the process' stdout receives text.
+  /**
+   * Function that will be executed every time the process' stdout receives text.
+   */
   final FutureOr<void> Function(FlowContext context, List<int> chars)? onStdout;
 
-  /// Function that will be executed every time the process' stderr receives text.
+  /**
+   * Function that will be executed every time the process' stderr receives text.
+   */
   final FutureOr<void> Function(FlowContext context, List<int> chars)? onStderr;
 
+  /**
+   * Tag describing whatever this [Shell] does.
+   */
   final String name;
+
+  /**
+   * Default const constructor.
+   *
+   * The default values of [runAsAdministrator] and [runInShell] are [false].
+   */
   const Shell({
     required this.name,
     required this.program,
@@ -46,10 +67,19 @@ final class Shell extends ConfigureStep {
     this.workingDirectory,
   });
 
-  /// UUID for the placeholder file on windows.
+  /**
+   * UUID for the placeholder file on windows.
+   */
   final Uuid uuid = const Uuid();
+
+  /**
+   * Path of the placeholder file on windows.
+   */
   File get _processFile => File(path.join(workingDirectory ?? "./", ".$uuid"));
 
+  /**
+   * Receives the command's first argument. (The program's name)
+   */
   String getProgram() {
     if (runAsAdministrator) {
       return Platform.isWindows ? "powershell.exe" : "sudo";
@@ -57,7 +87,11 @@ final class Shell extends ConfigureStep {
     return program;
   }
 
-  /// On windows the powershell is required to acquire elevated privileges.
+  /**
+   * Returns formatted arguments.
+   *
+   * On windows the powershell is required to acquire elevated privileges.
+   */
   List<String> getArguments() {
     if (runAsAdministrator) {
       return Platform.isWindows
@@ -102,6 +136,9 @@ final class Shell extends ConfigureStep {
     return completer.future;
   }
 
+  /**
+   * Returns the composed process that will be started.
+   */
   Future<Process> getProcess() => Process.start(
     getProgram(),
     getArguments(),
@@ -115,14 +152,18 @@ final class Shell extends ConfigureStep {
   @override
   Step configure() => Runnable(name: name, (context) async {
     final process = await getProcess();
-
+    /*
+     * We have to await both futures at once with the list.
+     */
     final List<Future<void>> futures = [];
     process.stdout.listen((chars) {
       if (onStdout != null) {
         futures.add(Future.value(onStdout!(context, chars)));
       }
     });
-
+    /*
+     * A full string is built for the response.
+     */
     String fullStderr = "";
     process.stderr.listen((chars) {
       if (onStderr != null) {
@@ -131,6 +172,10 @@ final class Shell extends ConfigureStep {
       fullStderr += "\n${String.fromCharCodes(chars)}";
     });
 
+    /*
+     * Await the process to be completed.
+     * Then awaits only the futures (The actions of the stdout & stderr are already done).
+     */
     await process.exitCode;
     await Future.wait(futures);
 
@@ -149,6 +194,7 @@ final class Shell extends ConfigureStep {
 
   @override
   Map<String, dynamic> toJson() => {
+    "type": "shell",
     "name": name,
     "run_as_administrator": runAsAdministrator,
     "run_in_shell": runInShell,

@@ -8,7 +8,9 @@ import 'package:stepflow/common.dart';
 final class Skipped extends Step {
   const Skipped();
 
-  /// Does nothing than returns the candidate.
+  /**
+   * Does nothing than returns the candidate.
+   */
   @override
   FutureOr<Step?> execute(
     final FlowContextController controller, [
@@ -18,5 +20,7 @@ final class Skipped extends Step {
   }
 
   @override
-  Map<String, dynamic> toJson() => {};
+  Map<String, dynamic> toJson() => {
+    "type": "run"
+  };
 }

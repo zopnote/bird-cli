@@ -14,13 +14,6 @@ Future<Response> runWorkflow(
   final FlowContextController controller = FlowContextController.observed(
     onData ?? (_) {},
   );
-  controller.context.send(
-    const Response("""
-  NOTICE - Stepflow isn't currently stable.
-  I uploaded it as 1.0, because I forgot to change the version number.
-  I'll just continue with this flaw and make version 2.0 the first api stable one.
-  """, Level.verbose),
-  );
   await step.execute(controller);
   return await controller.close();
 }
@@ -97,14 +90,20 @@ final class FlowContextController {
  * workflow's information without modifying the workflow while it's running.
  */
 final class FlowContext {
-  /// Sets the Context's depth. Mapped to it's controller.
+  /**
+   * Sets the Context's depth. Mapped to it's controller.
+   */
   final void Function(int value) _setDepth;
 
-  /// Gets the Context's depth. Mapped to it's controller.
+  /**
+   * Gets the Context's depth. Mapped to it's controller.
+   */
   final int Function() _getDepth;
 
-  /// The [StreamSink] for all [Response]s,
-  /// that should be send to the user of the workflow.
+  /**
+   * The [StreamSink] for all [Response]s,
+   * that should be send to the user of the workflow.
+   */
   final StreamSink<Response> sink;
 
   FlowContext(this._setDepth, this._getDepth, {required this.sink});

@@ -35,8 +35,16 @@ final class Install extends ConfigureStep {
    */
   final List<String> excludeFileWithPatterns;
 
+  /**
+   * Tag describing what [Install] does.
+   */
   final String name;
-  Install({
+
+  /**
+   * Default const constructor.
+   * All lists are set to empty ones, on default.
+   */
+  const Install({
     required this.name,
     this.installPath = const [],
     this.binariesPath = const [],
@@ -45,6 +53,9 @@ final class Install extends ConfigureStep {
     this.excludeFileWithPatterns = const [],
   });
 
+  /**
+   * Installs a single [File].
+   */
   void _forFile(File file) {
     final String fileName = path.basenameWithoutExtension(file.path);
     final String fileExtension = path.extension(file.path);
@@ -63,6 +74,9 @@ final class Install extends ConfigureStep {
     file.copySync(fileInstallPath);
   }
 
+  /**
+   * Installs a single [Directory] with all it's files.
+   */
   void _forDirectory(Directory directory) {
     if (!directories.contains(path.basename(directory.path))) {
       return;

@@ -7,10 +7,20 @@ import 'package:stepflow/common.dart';
  * [Skipped] [Step] based on [condition].
  */
 final class Conditional extends ConfigureStep {
-  /// If the [child] should be returned.
+  /**
+   * If the [child] should be returned on configuration.
+   */
   final bool condition;
-  /// [Step] that maybe will be in condition.
+
+  /**
+   * [Step] that maybe will be in condition.
+   */
   final Step child;
+
+  /**
+   * Default const constructor for a conditional.
+   * Uses the condition on runtime.
+   */
   const Conditional({required this.condition, required this.child});
 
   @override

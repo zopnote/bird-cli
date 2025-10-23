@@ -27,23 +27,25 @@ class Flag<T> {
   final String name;
 
   /**
-   * Immutable reference to the description of the flag,
-   * explaining the purpose of the property.
+   * Description of the flag, explaining the purpose of the property.
    *
    * It will be displayed as part of the help/syntax message.
    */
   final String description;
 
-  /// The mutable reference to the flags value.
+  /**
+   * The mutable reference to the flags value.
+   */
   T value;
 
   /**
-   * Immutable reference to the flags example values,
-   * provided only at the initialization.
+   * The flags example values done for guiding.
    */
   final List<T> examples;
 
-  /// Returns the flags value as a formatted string.
+  /**
+   * Returns the flags value as a formatted string.
+   */
   String getFormatted() => format(value);
 
   /**
@@ -53,28 +55,39 @@ class Flag<T> {
   List<String> getExamplesFormatted() =>
       examples.map<String>((example) => format(example)).toList();
 
-  /// Parse a raw immutable string reference into the flags value type.
+  /**
+   * Parses a string into the flags value type.
+   * Returns the parsed value.
+   */
   final T Function(String raw) parse;
 
-  /// Formats the flags value type into a string.
+  /**
+   * Formats the flags value into a string,
+   * that can be parsed by the Flag's [parse] function.
+   */
   final String Function(T value) format;
 
-  /// Sets the parsed raw value as the flags one.
+  /**
+   * Sets the parsed raw value as the flags one.
+   */
   void setParsed(String raw) => value = parse(raw);
 
   @override
+  int get hashCode => Object.hash(name, description, examples, parse, format);
+
+  @override
   bool operator ==(Object other) {
-    if (!(other is Flag)) {
-      throw Exception(
-        "Can't compare to values of different types. ${other.runtimeType} and ${this.runtimeType}",
-      );
-    }
-    return name == other.name;
+    return identical(this, other);
   }
 
   @override
   String toString() => format(value);
 
+  /**
+   * Syntax message part describing the flag.
+   *
+   * Used as part of [Command.syntaxMessage()].
+   */
   String syntaxString() {
     String syntax = "--${name}";
     final int space = 13 - name.length;
@@ -89,7 +102,7 @@ class Flag<T> {
 }
 
 /**
- * A flag representing a text value.
+ * A flag that contains a [String] as it's value.
  */
 final class TextFlag extends Flag<String> {
   TextFlag({required super.name, super.description})
@@ -121,7 +134,10 @@ final class TextFlag extends Flag<String> {
 }
 
 /**
- * A flag representing a truthness value.
+ * A flag representing a boolean value.
+ *
+ * Whenever the flag is provided in command line,
+ * it is interpreted as true, even without specifying it directly.
  */
 final class BoolFlag extends Flag<bool> {
   BoolFlag({required super.name, required super.value, super.description})

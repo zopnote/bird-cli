@@ -1,16 +1,3 @@
-> Note, that Stepflow isn't really finished. 
-> I released it as 1.0 because I didn't really thought about it and 
-> then I let the version number untouched. After I got actual downloads I realized, 
-> I should care about the versioning of the package.
-> 
-> Therefore, I will stay with this flaw, 
-> and I'm going to release the first 2.0 version whenever 
-> the interface is stable and other packages should be able
-> to depend on Stepflow.
-
-If you depend on Stepflow below version 2.0, 
-you should be aware of interface changes.
-
 # Stepflow - Modular workflow composition
 [![Stability of main branch](https://github.com/zopnote/stepflow/actions/workflows/dart-project-quality.yml/badge.svg)](https://github.com/zopnote/stepflow/actions/workflows/dart-project-quality.yml)
 ![Latest release](https://img.shields.io/github/v/release/zopnote/stepflow?include_prereleases&label=Latest%20release)
@@ -26,36 +13,71 @@ dart pub add stepflow
 ````
 
 ## Common workflow design
-A workflow in Stepflow consists of a chain of ``Step``s, which are
-able to manipulate their own execution order and behaviour.
-At first this seems to not evaluate the aspects that are important and
-better driven by single responsibility. But through the design a workflow
-can have states and is able to respond to different situations.
+A workflow in Stepflow consists of a chain of ``Step``s. 
+They consist of just an execute function, that has to return the next ``Step``.
+Through the design of the workflow pipeline, a workflow and it's steps,
+can have states and are able to respond to different situations.
+
 This opens the way for the most important step. 
-The ``Bubble extends Step``, that contains logic about 
-the execution of steps inside of it.
+The ``Bubble``, that contains logic about 
+the execution of steps inside of it, most workflows will be started inside one.
 
 ![workflow illustration](.images/workflow_illustration_1.png)
-The ``Chain`` step is also just
-a bubble with an indexed ``builder()``-function
-or the ``Loop`` step is a bubble which repeatedly execute its steps.
-A workflow is started inside a ``Bubble``.
 With ``context.pop()`` you can always escape the current bubble
 directly with an error message. With ``context.close()`` you can exit all bubbles.
 If you want an own behaviour of execution,
-you should create a subclass of ``Bubble``.
+you should create a subclass of ``Bubble``. Documentation is in the source files and examples are [here](examples).
 
-![chain illustration](.images/chain_illustration_1.png)
-Furthermore, Stepflow has the ``ConfigureStep``, that is quite the same as a ``Widget`` for and in Flutter.
-It is a step, that will atomize itself into the steps, it is composed of. Because a workflow is also just
-a step itself, you create it as one. You can find example for workflows and steps [here](examples). Just as you
-would expect, a ``ConfigureStep`` has to be extended and it`s ``configure()``-function should be overridden.
-It returns then the composition of steps. A list and explanation of the common steps can be found in the GitHub wiki.
+## Composition of Steps
+If you just want to build a workflow inside an application, you should use the ``ConfigureStep``. 
+There are cases where you have to extend ``Step`` or ``Bubble``, but the most workflows will be less
+complex and more readable if you just compose steps with ``ConfigureStep``. It is quite the same as ``StatelessWidget``s in Flutter.
+**For example:**
+````dart
+class PrintOutDartVersion extends ConfigureStep {
+  const PrintOutDartVersion();
+  @override
+  Step configure() {
+    String version = "";
+    // Chain is the bubble of this Step, with context.pop() you could escape.
+    return Chain(
+      steps: [
+        Check(
+          name: "Ensures the availability of the Dart SDK",
+          programs: ["dart"],
+          searchCanStartProcesses: false,
+          onFailure: (context, notFound) {
+            context.close("The Dart SDK isn't available on this platform.");
+          },
+        ),
+        Shell(
+          name: "Receives the Dart SDK's version",
+          program: "dart",
+          arguments: ["--version"],
+          onStdout: (context, chars) {
+            version += String.fromCharCodes(chars);
+          },
+        ),
+        Runnable(name: "Prints out the version", (context) {
+          print(
+            "The version of the installed Dart SDK is " +
+                version.split(" ")[3] +
+                "!",
+          );
+        }),
+      ],
+    );
+  }
+}
+````
+It is a step, that will atomize itself into the steps, it is composed of. A ``ConfigureStep`` has to be extended and it`s ``configure()``-function should be overridden.
+It returns then a composition of steps. A list and explanation of the common steps can be found in their sources [here](lib/common/steps).
 
+**For further information, checkout the implementation of [dart2embed](https://github.com/zopnote/dart2embed/tree/main) that uses Stepflow.**
 
 ## CLI
 Stepflow also comes with framework-like-styled glue code for CLI commands and flags.
-A ``Command`` consists of at least the following settings:
+A ``Command`` often consists of the following settings:
 * use - _The name of the command_
   * If the command is the base of the application the ``use`` has just ascetic purpose 
     other than describing in the syntax.
@@ -66,4 +88,38 @@ A ``Command`` consists of at least the following settings:
   * The ``CommandInformation`` holds the data of the current command and it's processing.
   * ``run()`` can be async
 
+**Example:**
+````dart
+import 'package:stepflow/cli.dart';
+
+Future<void> main(List<String> rawArgs) => runCommand(
+  Command(
+    use: "my_cli",
+    description: "Just a short cli example",
+    hidden: true,
+    inheritFlags: false,
+    flags: [BoolFlag(name: "smile", value: false)],
+    run: (info) {
+      if (info.getFlag("smile").value) {
+        return Response(":)", Level.status);
+      }
+      return Response(info.formatSyntax(), Level.status);
+    },
+    subCommands: [
+      Command(
+        use: "greet",
+        description: "Greets the entire world.",
+        run: (info) {
+          return Response(
+            "Hello world! " + (info.getFlag("smile").value ? ":)" : ""),
+          );
+        },
+      ),
+    ],
+  ),
+  rawArgs,
+);
+
+````
 For more documentation about ``Command`` look inside the [documentation in the source files](lib/cli/command.dart).
+

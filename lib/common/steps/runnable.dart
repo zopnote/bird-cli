@@ -6,16 +6,23 @@ import '../workflow.dart';
 import 'atomics.dart';
 
 /**
- * Executes the [run] function and returns the next [Step].
+ * Executes the [run] function as atomic part of a workflow.
  */
 final class Runnable extends Step {
-  /// Function that will be run at [Step] execution.
+  /**
+   * Function that will be run at [Step]'s execution.
+   */
   final FutureOr<void> Function(FlowContext context) run;
 
-  /// Nametag of what this [Step] does.
+  /**
+   * Tag describing what the [Runnable] does.
+   */
   final String name;
   Runnable(this.run, {required this.name});
 
+  /**
+   * Executes the [run] function and returns the candidate.
+   */
   @protected
   @override
   Future<Step?> execute(
