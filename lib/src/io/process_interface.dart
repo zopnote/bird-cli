@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
-import 'package:stepflow/platform.dart' as stepflow;
+import 'package:modspec/src/platform.dart' as stepflow;
 import 'package:uuid/uuid.dart';
 
 /**
