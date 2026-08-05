@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
-import 'package:modspec/src/platform.dart' as stepflow;
 import 'package:uuid/uuid.dart';
 
 /**
@@ -229,5 +228,15 @@ class ProcessInterface {
     };
     check();
     return completer.future;
+  }
+}
+extension FirstWhereOrNullExtension<T> on Iterable<T> {
+  T? firstWhereOrNull(bool Function(T element) test) {
+    for (final T element in this) {
+      if (test(element)) {
+        return element;
+      }
+    }
+    return null;
   }
 }

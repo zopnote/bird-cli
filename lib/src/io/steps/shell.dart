@@ -2,6 +2,36 @@ import 'dart:async';
 import 'package:stepflow/core.dart';
 import 'package:stepflow/io.dart';
 
+final class ListBuilder {
+  factory ListBuilder.plain(List<String> list) {
+    return ListBuilder._internal(list);
+  }
+
+  ListBuilder._internal([List<String>? list]) : _arguments = list ?? List.empty(growable: true);
+
+  factory ListBuilder() => ListBuilder._internal();
+
+  final List<String> _arguments;
+
+  String operator [](int i) {
+    return _arguments[i];
+  }
+
+  void addIf(bool condition, String value) {
+    if (condition) _arguments.add(value);
+  }
+
+  void addNotNull(String? value) {
+    if (value != null) _arguments.add(value);
+  }
+
+  void add(String value) =>
+      _arguments.add(value);
+
+
+  List<String> toList() => _arguments;
+}
+
 /**
  * Executes a program in the systems command line.
  */
