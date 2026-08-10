@@ -13,7 +13,7 @@ void main() {
 
         // On Windows 'dir', on others 'ls'
         final isWindows = Platform.isWindows;
-        final program = isWindows ? 'cmd' : 'ls';
+        final program = isWindows ? 'cmd' : 'cat';
         final args =
             isWindows ? ['/c', 'dir', 'test_file.txt'] : ['test_file.txt'];
 
