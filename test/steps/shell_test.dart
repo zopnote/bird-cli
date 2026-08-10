@@ -23,6 +23,7 @@ void main() {
             runInShell: win,
           ),
           onStdout: (data) {
+            print(String.fromCharCodes(data));
             if (String.fromCharCodes(data).contains('test_file.txt')) {
               foundFile = true;
             }
