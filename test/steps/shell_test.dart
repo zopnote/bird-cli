@@ -23,6 +23,7 @@ void main() {
         );
 
         await runWorkflow(shell);
+        print("ESRDFFV_${foundFile.contains(file.path.split("/").last)}");
         expect(foundFile.contains(file.path.split("/").last), true,
             reason: 'Should find the test file in the working directory');
       } finally {
