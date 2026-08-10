@@ -48,6 +48,18 @@ class ProcessInterfaceOptions {
 }
 
 /**
+ * Simple exception class, when the specified
+ * working directory doesn't seem to exist.
+ */
+final class DirectoryNotExistsException implements Exception {
+  static const String message = "The working directory doesn't exists.";
+  final StackTrace stackTrace;
+  const DirectoryNotExistsException(this.stackTrace);
+  @override
+  String toString() => message;
+}
+
+/**
  * A wrapper around [Process] that provides additional management capabilities.
  */
 class ProcessInterface {
@@ -158,12 +170,17 @@ class ProcessInterface {
               New-Item -ItemType File -Path "${_validationFile(path, uuid).path}"
               """,
         ];
-      }
-      else {
+      } else {
         final String? user = Platform.environment['USER'];
         if (user != null && user.isNotEmpty && user != "root") {
-          throw Exception("The process needs root access to execute the desired commands. Ensure the permissions are provided.");
+          throw Exception(
+              "The process needs root access to execute the desired commands. Ensure the permissions are provided.");
         }
+      }
+    }
+    if (options.workingDirectory != null) {
+      if (!Directory(options.workingDirectory!).existsSync()) {
+        throw DirectoryNotExistsException(StackTrace.current);
       }
     }
     final Process process = await Process.start(path, arguments,
@@ -230,6 +247,7 @@ class ProcessInterface {
     return completer.future;
   }
 }
+
 extension FirstWhereOrNullExtension<T> on Iterable<T> {
   T? firstWhereOrNull(bool Function(T element) test) {
     for (final T element in this) {

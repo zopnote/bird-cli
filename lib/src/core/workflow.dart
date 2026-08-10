@@ -34,13 +34,13 @@ Future<void> runWorkflow(
     if (e is! Exception) {
       rethrow;
     }
-    FlowException exception = FlowException(
+    final FlowException exception = FlowException(
         exception: e,
         stackTrace: [st],
         depth: controller._depth,
         currentStep: controller._current!);
     if (onException == null) {
-      throw exception;
+      throw st;
     }
     onException.call(exception);
   }
