@@ -8,30 +8,22 @@ void main() {
     test('Shell step respects workingDirectory', () async {
       final tempDir = Directory.systemTemp.createTempSync('stepflow_test');
       try {
-        final testFile = File('${tempDir.path}/test_file.txt');
-        testFile.writeAsStringSync('hello');
+        final File file = File('${tempDir.path}/test_file.txt')
+          ..createSync(recursive: true);
 
         // On Windows 'dir', on others 'ls'
         final win = Platform.isWindows;
 
-        bool foundFile = false;
+        String foundFile = "";
         final shell = Shell(
           program: win ? 'cmd' : 'ls',
           arguments: <String>[]..addAllIf(win, ['/c', 'dir', 'test_file.txt']),
-          options: ProcessInterfaceOptions(
-            workingDirectory: tempDir.path,
-            runInShell: win,
-          ),
-          onStdout: (data) {
-            print(String.fromCharCodes(data));
-            if (String.fromCharCodes(data).contains('test_file.txt')) {
-              foundFile = true;
-            }
-          },
+          options: ProcessInterfaceOptions(workingDirectory: tempDir.path),
+          onStdout: (chars) => foundFile += String.fromCharCodes(chars),
         );
 
         await runWorkflow(shell);
-        expect(foundFile, isTrue,
+        expect(foundFile.contains(file.path.split("/").last), isTrue,
             reason: 'Should find the test file in the working directory');
       } finally {
         tempDir.deleteSync(recursive: true);
