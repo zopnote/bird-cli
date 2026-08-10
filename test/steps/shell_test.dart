@@ -12,18 +12,15 @@ void main() {
         testFile.writeAsStringSync('hello');
 
         // On Windows 'dir', on others 'ls'
-        final isWindows = Platform.isWindows;
-        final program = isWindows ? 'cmd' : 'cat';
-        final args =
-            isWindows ? ['/c', 'dir', 'test_file.txt'] : ['test_file.txt'];
+        final win = Platform.isWindows;
 
         bool foundFile = false;
         final shell = Shell(
-          program: program,
-          arguments: args,
+          program: win ? 'cmd' : 'ls',
+          arguments: <String>[]..addAllIf(win, ['/c', 'dir', 'test_file.txt']),
           options: ProcessInterfaceOptions(
             workingDirectory: tempDir.path,
-            runInShell: isWindows,
+            runInShell: win,
           ),
           onStdout: (data) {
             if (String.fromCharCodes(data).contains('test_file.txt')) {

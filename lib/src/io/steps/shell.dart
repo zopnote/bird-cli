@@ -7,11 +7,9 @@ extension BuildListExtension<T> on List<T> {
     if (condition) add(value);
   }
 
-  void addAllIf(bool condition, Iterable<List<T>> value) {
+  void addAllIf(bool condition, List<T> value) {
     if (!condition) return;
-    for (final v in value) {
-      addAll(v);
-    }
+    addAll(value);
   }
 
   void addNotNull(T? value) {
