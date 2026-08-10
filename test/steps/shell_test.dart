@@ -14,17 +14,16 @@ void main() {
         // On Windows 'dir', on others 'ls'
         final win = Platform.isWindows;
 
-        String foundFile = "";
+        String strout = "";
         final shell = Shell(
           program: win ? 'cmd' : 'ls',
           arguments: <String>[]..addAllIf(win, ['/c', 'dir', 'test_file.txt']),
           options: ProcessInterfaceOptions(workingDirectory: tempDir.path),
-          onStdout: (chars) => foundFile += String.fromCharCodes(chars),
+          onStdout: (chars) => strout += String.fromCharCodes(chars),
         );
 
         await runWorkflow(shell);
-        print("ESRDFFV_${foundFile.contains(file.path.split("/").last)}");
-        expect(foundFile.contains(file.path.split("/").last), true,
+        expect(strout.contains(file.path.split("/").last), true,
             reason: 'Should find the test file in the working directory');
       } finally {
         tempDir.deleteSync(recursive: true);

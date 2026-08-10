@@ -89,7 +89,12 @@ class ProcessInterface {
    */
   final bool isManaged;
 
-  const ProcessInterface._internal(this._process, this.uuid,
+  /**
+   * List of [Future]s that have to be awaited before returning.
+   */
+  final List<Future> _awaitable;
+
+  const ProcessInterface._internal(this._process, this._awaitable, this.uuid,
       [this.options, this.executableFilePath, this.isManaged = false]);
 
   /**
@@ -131,7 +136,7 @@ class ProcessInterface {
           {final ProcessInterfaceOptions? options,
           final String? executableFilePath}) =>
       ProcessInterface._internal(
-          process, const Uuid(), options, executableFilePath, false);
+          process, [process.stdout.listen((c) {}).asFuture(), process.stderr.listen((c) {}).asFuture()], const Uuid(), options, executableFilePath, false);
 
   /**
    * Creates a [ProcessInterface] by starting a process from a file path.
@@ -189,15 +194,16 @@ class ProcessInterface {
         includeParentEnvironment: true,
         mode: ProcessStartMode.normal,
         runInShell: options.runInShell);
+    final List<Future> awaitable = [];
 
     if (onStdout != null) {
-      process.stdout.listen((c) => onStdout(c));
+      awaitable.add(process.stdout.listen((c) => onStdout(c)).asFuture());
     }
     if (onStderr != null) {
-      process.stderr.listen((c) => onStderr(c));
+      awaitable.add(process.stderr.listen((c) => onStderr(c)).asFuture());
     }
 
-    return ProcessInterface._internal(process, uuid, options, path, true);
+    return ProcessInterface._internal(process, awaitable, uuid, options, path, true);
   }
 
   /**
@@ -220,6 +226,7 @@ class ProcessInterface {
     if (options!.runAsAdministrator && Platform.isWindows) {
       await _waitForPowershell();
     }
+    await Future.wait(_awaitable);
     return _process.exitCode;
   }
 
