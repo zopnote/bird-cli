@@ -23,7 +23,7 @@ void main() {
         );
 
         await runWorkflow(shell);
-        expect(foundFile.contains(file.path.split("/").last), isTrue,
+        expect(true, foundFile.contains(file.path.split("/").last),
             reason: 'Should find the test file in the working directory');
       } finally {
         tempDir.deleteSync(recursive: true);
