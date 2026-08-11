@@ -2,33 +2,6 @@ import 'dart:async';
 import 'package:stepflow/core.dart';
 import 'package:stepflow/io.dart';
 
-extension BuildListExtension<T> on List<T> {
-  void addIf(bool condition, T value) {
-    if (condition) add(value);
-  }
-
-  void addAllIf(bool condition, List<T> value) {
-    if (!condition) return;
-    addAll(value);
-  }
-
-  void addNotNull(T? value) {
-    if (value != null) add(value);
-  }
-
-  void addAllNotNull(List<T?>? value) {
-    if (value != null) addAll(value.where((e) => e != null).map((e) => e!));
-  }
-
-  void mapNotNull<E>(E? value, T Function(E) map) {
-    if (value != null) add(map(value));
-  }
-
-  void mapAllNotNull<E>(E? value, List<T> Function(E) map) {
-    if (value != null) addAll(map(value));
-  }
-}
-
 /**
  * Executes a program in the systems command line.
  */

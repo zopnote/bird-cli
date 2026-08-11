@@ -87,3 +87,4 @@ struggle isn't worth the syntax sugar.
 specified working directory had not existed.
 - Added ``BuildListExtension`` on all Lists, with conditional add to list functions
 for constructing arguments in shell when mapping.
+- Fixed ``PlatformInterface`` exists before completing standard output.
