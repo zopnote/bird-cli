@@ -33,7 +33,7 @@ extension BuildListExtension<T> on List<T> {
     if (value != null) addAll(map(value));
   }
 
-  void mapAllIf<E>(bool value, Iterable<T> Function(E) map) {
+  void mapAllIf(bool value, Iterable<T> Function(bool) map) {
     if (value) addAll(map(value));
   }
 }
