@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart' as path;
-import 'package:stepflow/core.dart';
 import 'package:stepflow/io.dart';
 import 'package:test/test.dart';
 

@@ -1,5 +1,4 @@
 import 'package:stepflow/io.dart';
-import 'package:stepflow/core.dart';
 
 class PrintOutDartVersion extends ConfigureStep {
   const PrintOutDartVersion();

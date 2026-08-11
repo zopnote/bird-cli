@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:stepflow/core.dart';
+
 import 'package:stepflow/io.dart';
 
 /**
